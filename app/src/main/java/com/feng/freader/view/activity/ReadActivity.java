@@ -2,15 +2,20 @@ package com.feng.freader.view.activity;
 
 import android.content.Intent;
 import android.database.ContentObserver;
+import android.net.Uri;
 import android.os.Handler;
 import android.provider.Settings;
 import android.support.constraint.ConstraintLayout;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.PopupMenu;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -33,6 +38,8 @@ import com.feng.freader.entity.eventbus.Event;
 import com.feng.freader.entity.eventbus.HoldReadActivityEvent;
 import com.feng.freader.http.UrlObtainer;
 import com.feng.freader.presenter.ReadPresenter;
+import com.feng.freader.reader.ReaderProfileManager;
+import com.feng.freader.reader.ReaderRecord;
 import com.feng.freader.util.EpubUtils;
 import com.feng.freader.util.ScreenUtil;
 import com.feng.freader.util.EventBusUtil;
@@ -45,6 +52,7 @@ import com.feng.freader.widget.RealPageView;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -153,6 +161,9 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
     private boolean mIsNightMode;           // 是否为夜间模式
     private int mTurnType;      // 翻页模式：0 为正常，1 为仿真
 
+    private ReaderProfileManager mReaderProfileManager;
+    private long mReadingStartMs;
+
     private float mMinTextSize = 36f;
     private float mMaxTextSize = 76f;
     private float mMinRowSpace = 0f;
@@ -207,6 +218,8 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
 
         // 其他
         mDbManager = DatabaseManager.getInstance();
+        mReaderProfileManager = new ReaderProfileManager(this);
+        mReadingStartMs = System.currentTimeMillis();
     }
 
     @Override
@@ -466,6 +479,8 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mReaderProfileManager.addReadingTime(mNovelUrl,
+                System.currentTimeMillis() - mReadingStartMs);
         if (mIsNeedWrite2Db) {
             // 将书籍信息存入数据库
             mDbManager.deleteBookshelfNovel(mNovelUrl);
@@ -857,6 +872,107 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         mSettingBarCv.startAnimation(bottomExitAnim);
     }
 
+    private void showReaderMenu() {
+        PopupMenu popupMenu = new PopupMenu(this, mMenuIv);
+        popupMenu.getMenu().add(0, 1, 0, "加入书签");
+        popupMenu.getMenu().add(0, 2, 1, "写笔记");
+        popupMenu.getMenu().add(0, 3, 2, "保存高亮");
+        popupMenu.getMenu().add(0, 4, 3, "阅读统计");
+        popupMenu.getMenu().add(0, 5, 4, "词典查询");
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                if (item.getItemId() == 1) {
+                    addReaderRecord(ReaderRecord.BOOKMARK, "");
+                    showShortToast("已加入书签");
+                    return true;
+                }
+                if (item.getItemId() == 2) {
+                    showInputDialog("写笔记", "输入笔记", new InputCallback() {
+                        @Override
+                        public void onInput(String text) {
+                            addReaderRecord(ReaderRecord.NOTE, text);
+                            showShortToast("笔记已保存");
+                        }
+                    });
+                    return true;
+                }
+                if (item.getItemId() == 3) {
+                    showInputDialog("保存高亮", "输入摘录内容", new InputCallback() {
+                        @Override
+                        public void onInput(String text) {
+                            addReaderRecord(ReaderRecord.HIGHLIGHT, text);
+                            showShortToast("高亮已保存");
+                        }
+                    });
+                    return true;
+                }
+                if (item.getItemId() == 4) {
+                    new AlertDialog.Builder(ReadActivity.this)
+                            .setTitle(mName)
+                            .setMessage(mReaderProfileManager.buildSummary(mNovelUrl))
+                            .setPositiveButton("知道了", null)
+                            .show();
+                    return true;
+                }
+                showInputDialog("词典查询", "输入词语", new InputCallback() {
+                    @Override
+                    public void onInput(String text) {
+                        openDictionary(text);
+                    }
+                });
+                return true;
+            }
+        });
+        popupMenu.show();
+    }
+
+    private void addReaderRecord(String type, String text) {
+        int position = mType == 2 ? mPageView.getFirstPos() : mPageView.getPosition();
+        int secondPosition = mType == 2 ? mPageView.getSecondPos() : 0;
+        ReaderRecord record = new ReaderRecord(type, mNovelUrl, mName, text, mNovelProgress,
+                mChapterIndex, position, secondPosition, System.currentTimeMillis());
+        mReaderProfileManager.addRecord(record);
+    }
+
+    private void showInputDialog(String title, String hint, final InputCallback callback) {
+        final EditText editText = new EditText(this);
+        editText.setHint(hint);
+        editText.setSingleLine(false);
+        editText.setMinLines(2);
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setView(editText)
+                .setNegativeButton("取消", null)
+                .setPositiveButton("保存", new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(android.content.DialogInterface dialog, int which) {
+                        String text = editText.getText().toString().trim();
+                        if (text.length() == 0) {
+                            showShortToast("内容不能为空");
+                            return;
+                        }
+                        callback.onInput(text);
+                    }
+                })
+                .show();
+    }
+
+    private void openDictionary(String text) {
+        try {
+            String keyword = URLEncoder.encode(text, "UTF-8");
+            Intent intent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://hanyu.baidu.com/s?wd=" + keyword));
+            startActivity(intent);
+        } catch (Throwable t) {
+            showShortToast("无法打开词典");
+        }
+    }
+
+    private interface InputCallback {
+        void onInput(String text);
+    }
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -864,6 +980,7 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
                 finish();
                 break;
             case R.id.iv_read_menu:
+                showReaderMenu();
                 break;
             case R.id.tv_read_previous_chapter:
                 // 加载上一章节
