@@ -39,10 +39,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_TABLE_HISTORY);
         db.execSQL(CREATE_TABLE_BOOKSHELF_NOVEL);
+        createIndexes(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        createIndexes(db);
+    }
 
+    static void createIndexes(SQLiteDatabase db) {
+        db.execSQL("create index if not exists idx_history_word on "
+                + Constant.TABLE_HISTORY + "(" + Constant.TABLE_HISTORY_WORD + ")");
+        db.execSQL("create index if not exists idx_bookshelf_name on "
+                + Constant.TABLE_BOOKSHELF_NOVEL + "(" + Constant.TABLE_BOOKSHELF_NOVEL_NAME + ")");
+        db.execSQL("create index if not exists idx_bookshelf_progress on "
+                + Constant.TABLE_BOOKSHELF_NOVEL + "("
+                + Constant.TABLE_BOOKSHELF_NOVEL_CHAPTER_INDEX + ","
+                + Constant.TABLE_BOOKSHELF_NOVEL_POSITION + ")");
     }
 }

@@ -2,7 +2,7 @@ package com.feng.freader.source;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import com.feng.freader.http.NetworkClientFactory;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -13,10 +13,7 @@ import okhttp3.Response;
 public class SourceHttpClient {
     private static final MediaType FORM_TYPE =
             MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");
-    private final OkHttpClient client = new OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(12, TimeUnit.SECONDS)
-            .build();
+    private final OkHttpClient client = NetworkClientFactory.shared();
 
     public String execute(BookSource source, String keyword, int page) throws IOException {
         String url = SourceTemplate.render(source.getSearchUrl(), source, keyword, page);

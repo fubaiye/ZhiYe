@@ -27,6 +27,7 @@ public class DatabaseManager {
         SQLiteOpenHelper helper = new DatabaseHelper(
                 App.getContext(), Constant.DB_NAME, null, 1);
         mDb = helper.getWritableDatabase();
+        DatabaseHelper.createIndexes(mDb);
     }
 
     public static DatabaseManager getInstance() {

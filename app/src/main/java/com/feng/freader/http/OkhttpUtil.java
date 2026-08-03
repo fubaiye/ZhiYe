@@ -26,7 +26,7 @@ public class OkhttpUtil {
         if (okHttpClient == null) {
             synchronized (OkhttpUtil.class) {
                 if (okHttpClient == null) {
-                    okHttpClient = new OkHttpClient();
+                    okHttpClient = NetworkClientFactory.shared();
                 }
             }
         }
