@@ -21,6 +21,7 @@ import com.feng.freader.constract.IPressContract;
 import com.feng.freader.entity.data.DiscoveryNovelData;
 import com.feng.freader.presenter.PressPresenter;
 import com.feng.freader.util.ACache;
+import com.feng.freader.util.LoadingRequestRunner;
 import com.feng.freader.util.NetUtil;
 import com.feng.freader.view.activity.AllNovelActivity;
 import com.feng.freader.view.activity.SearchActivity;
@@ -103,8 +104,7 @@ public class PressFragment extends BaseTabFragment<PressPresenter>
     protected void doInOnCreate() {
         mIsCreatedView = true;
         if (mIsVisited && !mIsLoadedData) {
-            requestUpdate();
-            mProgressBar.setVisibility(View.VISIBLE);
+            requestUpdateWithLoading();
             mIsLoadedData = true;
         }
     }
@@ -116,10 +116,25 @@ public class PressFragment extends BaseTabFragment<PressPresenter>
             mIsVisited = true;
         }
         if (mIsVisited && !mIsLoadedData && mIsCreatedView) {
-            requestUpdate();
-            mProgressBar.setVisibility(View.VISIBLE);
+            requestUpdateWithLoading();
             mIsLoadedData = true;
         }
+    }
+
+    private void requestUpdateWithLoading() {
+        LoadingRequestRunner.run(new Runnable() {
+            @Override
+            public void run() {
+                if (mProgressBar != null) {
+                    mProgressBar.setVisibility(View.VISIBLE);
+                }
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                requestUpdate();
+            }
+        });
     }
 
     private void requestUpdate() {

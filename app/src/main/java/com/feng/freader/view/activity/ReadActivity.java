@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.provider.Settings;
 import android.support.constraint.ConstraintLayout;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -37,6 +38,7 @@ import com.feng.freader.util.ScreenUtil;
 import com.feng.freader.util.EventBusUtil;
 import com.feng.freader.util.SpUtil;
 import com.feng.freader.util.StatusBarUtil;
+import com.feng.freader.util.VolumePageTurnPolicy;
 import com.feng.freader.widget.PageView;
 import com.feng.freader.widget.RealPageView;
 
@@ -1009,6 +1011,32 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
                 break;
             default:
                 break;
+        }
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event != null) {
+            VolumePageTurnPolicy.TurnDirection direction =
+                    VolumePageTurnPolicy.directionForKeyCode(event.getKeyCode());
+            if (direction != VolumePageTurnPolicy.TurnDirection.NONE) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+                    turnPageByVolumeKey(direction);
+                }
+                return true;
+            }
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    private void turnPageByVolumeKey(VolumePageTurnPolicy.TurnDirection direction) {
+        if (mPageView == null) {
+            return;
+        }
+        if (direction == VolumePageTurnPolicy.TurnDirection.NEXT) {
+            mPageView.turnToNextPage();
+        } else if (direction == VolumePageTurnPolicy.TurnDirection.PREVIOUS) {
+            mPageView.turnToPreviousPage();
         }
     }
 

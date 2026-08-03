@@ -37,6 +37,7 @@ public class OkhttpUtil {
         //创建Request
         Request request = new Request.Builder()
                 .url(okhttpBuilder.url)
+                .header("User-Agent", "FReader/1.0 Android")
                 .build();
         //创建Call
         Call call = getOkHttpClient().newCall(request);

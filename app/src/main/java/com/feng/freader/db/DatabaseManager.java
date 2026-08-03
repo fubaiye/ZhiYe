@@ -104,6 +104,15 @@ public class DatabaseManager {
         mDb.insert(Constant.TABLE_BOOKSHELF_NOVEL, null, values);
     }
 
+    public void updateBookshelfNovelMetadata(String novelUrl, String name, String cover) {
+        ContentValues values = new ContentValues();
+        values.put(Constant.TABLE_BOOKSHELF_NOVEL_NAME, name);
+        values.put(Constant.TABLE_BOOKSHELF_NOVEL_COVER, cover);
+        mDb.update(Constant.TABLE_BOOKSHELF_NOVEL, values,
+                Constant.TABLE_BOOKSHELF_NOVEL_NOVEL_URL + " = ?",
+                new String[]{novelUrl});
+    }
+
     /**
      * 查询所有书架书籍信息
      */

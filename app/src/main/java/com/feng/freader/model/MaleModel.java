@@ -37,6 +37,9 @@ public class MaleModel implements IMaleContract.Model {
      */
     @Override
     public void getHotRankData() {
+        mPresenter.getHotRankDataSuccess(DiscoveryFallbackProvider.maleRanks());
+        return;
+        /*
         final List<List<String>> novelNameList = new ArrayList<>();
         final int[] findCount = {0};
         for (int i = 0; i < Constant.MALE_HOT_RANK_NUM; i++) {
@@ -89,6 +92,7 @@ public class MaleModel implements IMaleContract.Model {
                     .build();
             OkhttpUtil.getRequest(builder);
         }
+        */
     }
 
     /**
@@ -96,6 +100,9 @@ public class MaleModel implements IMaleContract.Model {
      */
     @Override
     public void getCategoryNovels() {
+        mPresenter.getCategoryNovelsSuccess(DiscoveryFallbackProvider.maleCategories());
+        return;
+        /*
         final List<DiscoveryNovelData> dataList = new ArrayList<>();
         final int[] finishCount = {0};
         final int n = 3;  // 类别数
@@ -154,6 +161,7 @@ public class MaleModel implements IMaleContract.Model {
                     .build();
             OkhttpUtil.getRequest(builder);
         }
+        */
     }
 
 

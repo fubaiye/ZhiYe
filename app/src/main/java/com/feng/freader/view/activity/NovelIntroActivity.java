@@ -23,6 +23,7 @@ import com.feng.freader.constant.EventBusCode;
 import com.feng.freader.entity.data.NovelSourceData;
 import com.feng.freader.entity.eventbus.Event;
 import com.feng.freader.entity.eventbus.NovelIntroInitEvent;
+import com.feng.freader.http.WikisourceApi;
 import com.feng.freader.test.TestActivity;
 import com.feng.freader.util.BlurUtil;
 
@@ -120,7 +121,7 @@ public class NovelIntroActivity extends BaseActivity implements View.OnClickList
         mNovelAuthorTv = findViewById(R.id.tv_novel_intro_novel_author);
         mNovelAuthorTv.setText(mNovelSourceData.getAuthor());
         mNovelWebSiteTv = findViewById(R.id.tv_novel_intro_novel_web_site);
-        mNovelWebSiteTv.setText(mNovelSourceData.getUrl());
+        mNovelWebSiteTv.setText(getDisplayUrl());
         mNovelIntroduceTv = findViewById(R.id.tv_novel_intro_novel_introduce);
         mNovelIntroduceTv.setText(mNovelSourceData.getIntroduce());
         mNovelIntroduceTv.setOnClickListener(this);
@@ -194,7 +195,7 @@ public class NovelIntroActivity extends BaseActivity implements View.OnClickList
                         switch (menuItem.getItemId()) {
                             case R.id.menu_novel_intro_show_in_browser:
                                 // 在浏览器显示
-                                Uri uri = Uri.parse(mNovelSourceData.getUrl());
+                                Uri uri = Uri.parse(getDisplayUrl());
                                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                                 try {
                                     startActivity(intent);
@@ -221,5 +222,13 @@ public class NovelIntroActivity extends BaseActivity implements View.OnClickList
             default:
                 break;
         }
+    }
+
+    private String getDisplayUrl() {
+        String url = mNovelSourceData.getUrl();
+        if (WikisourceApi.isWikisourceUrl(url)) {
+            return WikisourceApi.toBrowserUrl(url);
+        }
+        return url;
     }
 }

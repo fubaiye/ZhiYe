@@ -34,6 +34,9 @@ public class PressModel implements IPressContract.Model {
      */
     @Override
     public void getCategoryNovels() {
+        mPresenter.getCategoryNovelsSuccess(DiscoveryFallbackProvider.pressCategories());
+        return;
+        /*
         final List<DiscoveryNovelData> dataList = new ArrayList<>();
         final int[] finishCount = {0};
         final int n = 4;  // 类别数
@@ -91,5 +94,6 @@ public class PressModel implements IPressContract.Model {
                     .build();
             OkhttpUtil.getRequest(builder);
         }
+        */
     }
 }

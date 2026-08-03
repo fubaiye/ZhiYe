@@ -5,6 +5,7 @@ import com.feng.freader.constract.ISearchResultContract;
 import com.feng.freader.entity.bean.NovelsSourceBean;
 import com.feng.freader.entity.data.NovelSourceData;
 import com.feng.freader.http.UrlObtainer;
+import com.feng.freader.http.WikisourceApi;
 import com.feng.freader.httpUrlUtil.HttpUrlRequestBuilder;
 import com.feng.freader.httpUrlUtil.Request;
 import com.feng.freader.httpUrlUtil.Response;
@@ -28,6 +29,13 @@ public class SearchResultModel implements ISearchResultContract.Model {
 
     @Override
     public void getNovelsSource(String novelName) {
+        final String query = novelName;
+        List<NovelSourceData> localResults = DiscoveryFallbackProvider.searchSources(novelName);
+        if (!localResults.isEmpty()) {
+            mPresenter.getNovelsSourceSuccess(localResults);
+            return;
+        }
+
         // 构造请求
         Request request = new Request.Builder()
                 .setUrl(UrlObtainer.getNovelsSource(novelName))
@@ -39,8 +47,18 @@ public class SearchResultModel implements ISearchResultContract.Model {
                     @Override
                     public void success(String response) {
                         try {
+                            List<NovelSourceData> wikisourceResults =
+                                    WikisourceApi.parseSearchResults(response);
+                            if (!wikisourceResults.isEmpty()) {
+                                mPresenter.getNovelsSourceSuccess(wikisourceResults);
+                                return;
+                            }
                             NovelsSourceBean novelsSourceBean = mGson.fromJson(response,
                                     NovelsSourceBean.class);
+                            if (novelsSourceBean == null) {
+                                mPresenter.getNovelsSourceError(Constant.NOT_FOUND_NOVELS);
+                                return;
+                            }
                             int code = novelsSourceBean.getCode();
                             if (code == 0) {
                                 // 请求成功
@@ -65,7 +83,13 @@ public class SearchResultModel implements ISearchResultContract.Model {
                     @Override
                     public void error(String errorMsg) {
                         // 请求失败，返回失败原因
-                        mPresenter.getNovelsSourceError(errorMsg);
+                        List<NovelSourceData> fallbackResults =
+                                DiscoveryFallbackProvider.searchSources(query);
+                        if (!fallbackResults.isEmpty()) {
+                            mPresenter.getNovelsSourceSuccess(fallbackResults);
+                        } else {
+                            mPresenter.getNovelsSourceError(errorMsg);
+                        }
                     }
                 })
                 .build()

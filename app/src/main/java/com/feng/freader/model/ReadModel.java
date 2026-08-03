@@ -14,7 +14,9 @@ import com.feng.freader.entity.epub.OpfData;
 import com.feng.freader.http.OkhttpBuilder;
 import com.feng.freader.http.OkhttpCall;
 import com.feng.freader.http.OkhttpUtil;
+import com.feng.freader.http.WikisourceApi;
 import com.feng.freader.util.EpubUtils;
+import com.feng.freader.util.TextFileDecoder;
 import com.google.gson.Gson;
 
 import org.jsoup.Jsoup;
@@ -52,6 +54,14 @@ public class ReadModel implements IReadContract.Model {
 
     @Override
     public void getChapterList(String url) {
+        if (WikisourceApi.isWikisourceUrl(url)) {
+            List<String> chapterUrlList = new ArrayList<>();
+            List<String> chapterNameList = new ArrayList<>();
+            chapterUrlList.add(url);
+            chapterNameList.add(WikisourceApi.titleFromSourceUrl(url));
+            mPresenter.getChapterUrlListSuccess(chapterUrlList, chapterNameList);
+            return;
+        }
         OkhttpBuilder builder = new OkhttpBuilder.Builder()
                 .setUrl(url)
                 .setOkhttpCall(new OkhttpCall() {
@@ -83,11 +93,25 @@ public class ReadModel implements IReadContract.Model {
 
     @Override
     public void getDetailedChapterData(String url) {
+        final boolean isWikisourcePage = WikisourceApi.isWikisourcePageTextUrl(url);
         OkhttpBuilder builder = new OkhttpBuilder.Builder()
                 .setUrl(url)
                 .setOkhttpCall(new OkhttpCall() {
                     @Override
                     public void onResponse(String json) {   // 得到 json 数据
+                        if (isWikisourcePage) {
+                            try {
+                                DetailedChapterData data = WikisourceApi.parsePageText(json);
+                                if (data == null) {
+                                    mPresenter.getDetailedChapterDataError("未找到相关数据");
+                                    return;
+                                }
+                                mPresenter.getDetailedChapterDataSuccess(data);
+                            } catch (Throwable t) {
+                                mPresenter.getDetailedChapterDataError(Constant.JSON_ERROR);
+                            }
+                            return;
+                        }
                         DetailedChapterBean bean = mGson.fromJson(json, DetailedChapterBean.class);
                         if (bean.getCode() != 0) {
                             mPresenter.getDetailedChapterDataError("未找到相关数据");
@@ -119,46 +143,27 @@ public class ReadModel implements IReadContract.Model {
             @Override
             public void run() {
                 File file = new File(filePath);
-                BufferedReader br = null;
-                StringBuilder builder = null;
                 String error = "";
+                String text = "";
                 try {
-                    br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "gbk"));
-                    builder = new StringBuilder();
-                    String str;
-                    while ((str = br.readLine()) != null) {
-                        builder.append(str);
-                        builder.append("\n");
-                    }
+                    text = TextFileDecoder.read(file);
                 } catch (FileNotFoundException e) {
                     Log.d(TAG, "e1 = " + e.getMessage());
                     e.printStackTrace();
                     error = Constant.NOT_FOUND_FROM_LOCAL;
-                } catch (UnsupportedEncodingException e) {
-                    Log.d(TAG, "e2 = " + e.getMessage());
-                    e.printStackTrace();
-                    error = e.getMessage();
                 } catch (IOException e) {
                     Log.d(TAG, "e3 = " + e.getMessage());
                     e.printStackTrace();
                     error = e.getMessage();
-                } finally {
-                    try {
-                        if (br != null) {
-                            br.close();
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 }
 
                 final String finalError = error;
-                final String text =  builder == null? "" : builder.toString();
+                final String finalText = text;
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                     @Override
                     public void run() {
                         if (finalError.equals("")) {
-                            mPresenter.loadTxtSuccess(text);
+                            mPresenter.loadTxtSuccess(finalText);
                         } else {
                             mPresenter.loadTxtError(finalError);
                         }

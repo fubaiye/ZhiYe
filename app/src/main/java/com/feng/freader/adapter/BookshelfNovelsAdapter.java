@@ -70,20 +70,37 @@ public class BookshelfNovelsAdapter extends RecyclerView.Adapter {
             contentViewHolder.checkBox.setVisibility(View.GONE);
         }
         contentViewHolder.name.setText(mDataList.get(i).getName());
+        String cover = mDataList.get(i).getCover() == null ? "" : mDataList.get(i).getCover();
         if (mDataList.get(i).getType() == 0) {  // 网络小说
             Glide.with(mContext)
-                    .load(mDataList.get(i).getCover())
+                    .load(cover)
                     .apply(new RequestOptions()
                             .placeholder(R.drawable.cover_place_holder)
                             .error(R.drawable.cover_error))
                     .into(contentViewHolder.cover);
         } else if (mDataList.get(i).getType() == 1){    // 本地 txt 小说
-            contentViewHolder.cover.setImageResource(R.drawable.local_txt);
-        } else if (mDataList.get(i).getType() == 2) {   // 本地 epub 小说
-            if (mDataList.get(i).getCover().equals("")) {
-                contentViewHolder.cover.setImageResource(R.drawable.local_epub);
+            if (cover.startsWith("http")) {
+                Glide.with(mContext)
+                        .load(cover)
+                        .apply(new RequestOptions()
+                                .placeholder(R.drawable.local_txt)
+                                .error(R.drawable.local_txt))
+                        .into(contentViewHolder.cover);
             } else {
-                String coverPath = mDataList.get(i).getCover();
+                contentViewHolder.cover.setImageResource(R.drawable.local_txt);
+            }
+        } else if (mDataList.get(i).getType() == 2) {   // 本地 epub 小说
+            if (cover.equals("")) {
+                contentViewHolder.cover.setImageResource(R.drawable.local_epub);
+            } else if (cover.startsWith("http")) {
+                Glide.with(mContext)
+                        .load(cover)
+                        .apply(new RequestOptions()
+                                .placeholder(R.drawable.local_epub)
+                                .error(R.drawable.local_epub))
+                        .into(contentViewHolder.cover);
+            } else {
+                String coverPath = cover;
                 Bitmap bitmap = FileUtil.loadLocalPicture(coverPath);
                 if (bitmap != null) {
                     contentViewHolder.cover.setImageBitmap(bitmap);

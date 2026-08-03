@@ -33,6 +33,17 @@ public class AllNovelModel implements IAllNovelContract.Model {
      */
     @Override
     public void getNovels(final RequestCNData requestCNData) {
+        List<ANNovelData> fallbackList = DiscoveryFallbackProvider.page(
+                requestCNData.getStart(), requestCNData.getNum());
+        if (!fallbackList.isEmpty()) {
+            boolean isToEnd = requestCNData.getStart() + requestCNData.getNum()
+                    >= DiscoveryFallbackProvider.totalCount();
+            mPresenter.getNovelsSuccess(fallbackList, isToEnd);
+            return;
+        }
+        mPresenter.getNovelsError("没有更多数据");
+        return;
+        /*
         String url = UrlObtainer.getCategoryNovels(requestCNData.getGender(), requestCNData.getMajor(),
                 requestCNData.getMinor(), requestCNData.getType(),
                 requestCNData.getStart(), requestCNData.getNum());
@@ -67,5 +78,6 @@ public class AllNovelModel implements IAllNovelContract.Model {
                 })
                 .build();
         OkhttpUtil.getRequest(builder);
+        */
     }
 }

@@ -1,8 +1,11 @@
 package com.feng.freader.util;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.os.Build;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 
 /**
  * @author Feng Zhaohao
@@ -16,10 +19,12 @@ public class StatusBarUtil {
      * @param activity
      */
     public static void setLightColorStatusBar(Activity activity) {
-        // 6.0 以上版本
+        makeStatusBarTransparent(activity);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             View decor = activity.getWindow().getDecorView();
             decor.setSystemUiVisibility(decor.getSystemUiVisibility()
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                     | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
     }
@@ -30,12 +35,25 @@ public class StatusBarUtil {
      * @param activity
      */
     public static void setDarkColorStatusBar(Activity activity) {
-        // 6.0 以上版本
+        makeStatusBarTransparent(activity);
+        View decor = activity.getWindow().getDecorView();
+        int flags = decor.getSystemUiVisibility()
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            View decor = activity.getWindow().getDecorView();
-            decor.setSystemUiVisibility(decor.getSystemUiVisibility()
-                    & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+            flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
         }
+        decor.setSystemUiVisibility(flags);
+    }
+
+    private static void makeStatusBarTransparent(Activity activity) {
+        if (activity == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            return;
+        }
+        Window window = activity.getWindow();
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.setStatusBarColor(Color.TRANSPARENT);
     }
 
 }

@@ -27,7 +27,7 @@ public class UrlObtainer {
      * @return
      */
     public static String getNovelsSource(String novelName) {
-        return "http://api.pingcc.cn/?xsname=" + novelName;
+        return WikisourceApi.buildSearchUrl(novelName);
     }
 
     /**
@@ -37,6 +37,9 @@ public class UrlObtainer {
      * @return
      */
     public static String getCatalogInfo(String url) {
+        if (WikisourceApi.isWikisourceUrl(url)) {
+            return url;
+        }
         return "http://api.pingcc.cn/?xsurl1=" + url;
     }
 
@@ -47,6 +50,9 @@ public class UrlObtainer {
      * @return
      */
     public static String getDetailedChapter(String url) {
+        if (WikisourceApi.isWikisourceUrl(url)) {
+            return WikisourceApi.buildPageTextUrl(WikisourceApi.titleFromSourceUrl(url));
+        }
         return "http://api.pingcc.cn/?xsurl2=" + url;
     }
 

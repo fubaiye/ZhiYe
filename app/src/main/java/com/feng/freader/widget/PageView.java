@@ -587,6 +587,10 @@ public class PageView extends View {
         return true;
     }
 
+    public boolean turnToNextPage() {
+        return next();
+    }
+
     /**
      * 绘制上一页
      */
@@ -623,6 +627,10 @@ public class PageView extends View {
         }
 
         return true;
+    }
+
+    public boolean turnToPreviousPage() {
+        return pre();
     }
 
     /**

@@ -3,7 +3,6 @@ package com.feng.freader.view.fragment.main;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.GridLayoutManager;
@@ -25,6 +24,8 @@ import com.feng.freader.db.DatabaseManager;
 import com.feng.freader.entity.data.BookshelfNovelDbData;
 import com.feng.freader.entity.epub.OpfData;
 import com.feng.freader.entity.eventbus.Event;
+import com.feng.freader.model.LocalBookMetadata;
+import com.feng.freader.model.LocalBookMetadataFetcher;
 import com.feng.freader.presenter.BookshelfPresenter;
 import com.feng.freader.util.FileUtil;
 import com.feng.freader.util.NetUtil;
@@ -39,7 +40,9 @@ import org.w3c.dom.Text;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Feng Zhaohao
@@ -64,6 +67,7 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
     private List<Boolean> mCheckedList = new ArrayList<>();
     private BookshelfNovelsAdapter mBookshelfNovelsAdapter;
     private boolean mIsDeleting = false;
+    private final Set<String> mEnrichingLocalBooks = new HashSet<>();
 
     private DatabaseManager mDbManager;
 
@@ -132,8 +136,12 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
             case R.id.tv_bookshelf_add:
             case R.id.iv_bookshelf_add:
                 // 导入本机小说
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                 intent.setType("*/*");      // 最近文件（任意类型）
+                intent.putExtra(Intent.EXTRA_MIME_TYPES,
+                        new String[]{"text/*", "application/epub+zip", "application/octet-stream"});
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 startActivityForResult(intent, 1);
                 break;
@@ -223,23 +231,29 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK) { // 选择了才继续
-            Uri uri = data.getData();
-            File file = null;
-            String filePath;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                file = FileUtil.uri2FileQ(getActivity(), uri);
-                filePath = file.getPath();
-            } else {
-                filePath = FileUtil.uri2FilePath(getActivity(), uri);
-                if (filePath != null) {
-                    file = new File(filePath);
-                }
+            if (data == null) {
+                return;
             }
+            Uri uri = data.getData();
+            if (uri == null) {
+                return;
+            }
+            try {
+                getActivity().getContentResolver().takePersistableUriPermission(uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } catch (Throwable ignored) {
+            }
+            File file = FileUtil.uriToReadableFile(getActivity(), uri);
+            String filePath = file == null ? "" : file.getPath();
             if (file == null || TextUtils.isEmpty(filePath)) {
                 return;
             }
 
             String fileName = file.getName();
+            if (fileName.lastIndexOf(".") < 0) {
+                fileName = fileName + ".tmp";
+            }
+            fileName = fileName.toLowerCase();
             Log.d(TAG, "onActivityResult: fileLen = " + file.length());
             String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);  // 后缀名
             if (suffix.equals("txt")) {
@@ -251,10 +265,12 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
                     showShortToast("文件过大");
                     return;
                 }
+                String cleanTitle = LocalBookMetadata.cleanTitle(file.getName());
                 // 将该小说的数据存入数据库
-                BookshelfNovelDbData dbData = new BookshelfNovelDbData(filePath, file.getName(),
+                BookshelfNovelDbData dbData = new BookshelfNovelDbData(filePath, cleanTitle,
                         "", 0, 0, 1);
                 mDbManager.insertBookshelfNovel(dbData);
+                enrichLocalBookMetadata(dbData);
                 // 更新列表
                 mPresenter.queryAllBook();
             }
@@ -299,6 +315,55 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
             }
             mBookshelfNovelsAdapter.notifyDataSetChanged();
         }
+        enrichLocalBooks(dataList);
+    }
+
+    private void enrichLocalBooks(List<BookshelfNovelDbData> dataList) {
+        for (BookshelfNovelDbData data : dataList) {
+            if (data.getType() != 1 && data.getType() != 2) {
+                continue;
+            }
+            String cleanTitle = LocalBookMetadata.cleanTitle(data.getName());
+            if (!cleanTitle.equals(data.getName())) {
+                mDbManager.updateBookshelfNovelMetadata(data.getNovelUrl(),
+                        cleanTitle, data.getCover());
+                data.setName(cleanTitle);
+                if (mBookshelfNovelsAdapter != null) {
+                    mBookshelfNovelsAdapter.notifyDataSetChanged();
+                }
+            }
+            if (data.getCover() == null || data.getCover().isEmpty()) {
+                enrichLocalBookMetadata(data);
+            }
+        }
+    }
+
+    private void enrichLocalBookMetadata(final BookshelfNovelDbData data) {
+        if (data == null || data.getNovelUrl() == null
+                || mEnrichingLocalBooks.contains(data.getNovelUrl())
+                || !NetUtil.hasInternet(getActivity())) {
+            return;
+        }
+        mEnrichingLocalBooks.add(data.getNovelUrl());
+        LocalBookMetadataFetcher.fetch(data.getName(), new LocalBookMetadataFetcher.Callback() {
+            @Override
+            public void onSuccess(LocalBookMetadata metadata) {
+                String title = metadata.mergeTitle(data.getName());
+                String cover = metadata.mergeCover(data.getCover());
+                mDbManager.updateBookshelfNovelMetadata(data.getNovelUrl(), title, cover);
+                data.setName(title);
+                data.setCover(cover);
+                if (mBookshelfNovelsAdapter != null) {
+                    mBookshelfNovelsAdapter.notifyDataSetChanged();
+                }
+                mEnrichingLocalBooks.remove(data.getNovelUrl());
+            }
+
+            @Override
+            public void onError(String errorMsg) {
+                mEnrichingLocalBooks.remove(data.getNovelUrl());
+            }
+        });
     }
 
     private void initAdapter() {
@@ -356,9 +421,13 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
     public void unZipEpubSuccess(String filePath, OpfData opfData) {
         // 将书籍信息写入数据库
         File file = new File(filePath);
-        BookshelfNovelDbData dbData = new BookshelfNovelDbData(filePath, file.getName(),
+        String cleanTitle = LocalBookMetadata.cleanTitle(file.getName());
+        BookshelfNovelDbData dbData = new BookshelfNovelDbData(filePath, cleanTitle,
                 opfData.getCover(), 0, 0, 2);
         mDbManager.insertBookshelfNovel(dbData);
+        if (opfData.getCover() == null || opfData.getCover().isEmpty()) {
+            enrichLocalBookMetadata(dbData);
+        }
         // 更新列表
         mPresenter.queryAllBook();
 

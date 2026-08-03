@@ -46,6 +46,9 @@ public class FemaleModel implements IFemaleContract.Model {
      */
     @Override
     public void getHotRankData() {
+        mPresenter.getHotRankDataSuccess(DiscoveryFallbackProvider.femaleRanks());
+        return;
+        /*
         final List<List<String>> novelNameList = new ArrayList<>();
         final int[] findCount = {0};
         for (int i = 0; i < Constant.FEMALE_HOT_RANK_NUM; i++) {
@@ -97,6 +100,7 @@ public class FemaleModel implements IFemaleContract.Model {
                     .build();
             OkhttpUtil.getRequest(builder);
         }
+        */
     }
 
     /**
@@ -104,6 +108,9 @@ public class FemaleModel implements IFemaleContract.Model {
      */
     @Override
     public void getCategoryNovels() {
+        mPresenter.getCategoryNovelsSuccess(DiscoveryFallbackProvider.femaleCategories());
+        return;
+        /*
         final List<DiscoveryNovelData> dataList = new ArrayList<>();
         final int[] finishCount = {0};
         final int n = 3;  // 类别数
@@ -161,6 +168,7 @@ public class FemaleModel implements IFemaleContract.Model {
                     .build();
             OkhttpUtil.getRequest(builder);
         }
+        */
     }
 
 }

@@ -74,6 +74,11 @@ public class Constant {
     /* 文件存储 */
     public static final String EPUB_SAVE_PATH = App.getContext().getFilesDir() + "/epubFile";
 
+    /* 应用更新 */
+    public static final String UPDATE_REPOSITORY = "fubaiye/ZhiYe";
+    public static final String UPDATE_RELEASE_API_URL =
+            "https://api.github.com/repos/" + UPDATE_REPOSITORY + "/releases/latest";
+
     /* 分类小说相关 */
     // gender
     public static final String CATEGORY_GENDER_MALE = "male";   // 男生

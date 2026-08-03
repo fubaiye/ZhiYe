@@ -11,3 +11,7 @@
 /build
 /captures
 .externalNativeBuild
+*.apk
+*.idsig
+*.jks
+app/build/

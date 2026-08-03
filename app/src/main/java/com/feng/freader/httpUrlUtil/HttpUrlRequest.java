@@ -60,6 +60,7 @@ public class HttpUrlRequest {
                         default:
                             break;
                     }
+                    connection.setRequestProperty("User-Agent", "FReader/1.0 Android");
                     // 设置连接超时时间
                     connection.setConnectTimeout(mRequest.connectTimeout);
                     // 设置读取超时时间

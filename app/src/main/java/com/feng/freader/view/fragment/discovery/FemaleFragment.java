@@ -21,6 +21,7 @@ import com.feng.freader.entity.data.DiscoveryNovelData;
 import com.feng.freader.entity.data.HotRankData;
 import com.feng.freader.presenter.FemalePresenter;
 import com.feng.freader.util.ACache;
+import com.feng.freader.util.LoadingRequestRunner;
 import com.feng.freader.util.NetUtil;
 import com.feng.freader.view.activity.AllNovelActivity;
 import com.feng.freader.view.activity.SearchActivity;
@@ -111,8 +112,7 @@ public class FemaleFragment extends BaseTabFragment<FemalePresenter>
     protected void doInOnCreate() {
         mIsCreatedView = true;
         if (mIsVisited && !mIsLoadedData) {
-            requestUpdate();
-            mProgressBar.setVisibility(View.VISIBLE);
+            requestUpdateWithLoading();
             mIsLoadedData = true;
         }
     }
@@ -124,10 +124,25 @@ public class FemaleFragment extends BaseTabFragment<FemalePresenter>
             mIsVisited = true;
         }
         if (mIsVisited && !mIsLoadedData && mIsCreatedView) {
-            requestUpdate();
-            mProgressBar.setVisibility(View.VISIBLE);
+            requestUpdateWithLoading();
             mIsLoadedData = true;
         }
+    }
+
+    private void requestUpdateWithLoading() {
+        LoadingRequestRunner.run(new Runnable() {
+            @Override
+            public void run() {
+                if (mProgressBar != null) {
+                    mProgressBar.setVisibility(View.VISIBLE);
+                }
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                requestUpdate();
+            }
+        });
     }
 
     private void requestUpdate() {
@@ -155,6 +170,8 @@ public class FemaleFragment extends BaseTabFragment<FemalePresenter>
      */
     @Override
     public void getHotRankDataSuccess(List<List<String>> novelNameList) {
+        hideLoading();
+
         if (novelNameList.isEmpty()) {
             return;
         }
@@ -175,6 +192,8 @@ public class FemaleFragment extends BaseTabFragment<FemalePresenter>
      */
     @Override
     public void getHotRankDataError(String errorMsg) {
+        hideLoading();
+
         List<List<String>> novelNameList =
                 (List<List<String>>) mCache.getAsObject(KEY_CACHE_HR);
 
@@ -196,8 +215,7 @@ public class FemaleFragment extends BaseTabFragment<FemalePresenter>
      */
     @Override
     public void getCategoryNovelsSuccess(List<DiscoveryNovelData> dataList) {
-        mProgressBar.setVisibility(View.GONE);
-        mRefreshSrv.setRefreshing(false);
+        hideLoading();
 
         if (dataList.isEmpty()) {
             return;
@@ -219,8 +237,7 @@ public class FemaleFragment extends BaseTabFragment<FemalePresenter>
      */
     @Override
     public void getCategoryNovelsError(String errorMsg) {
-        mProgressBar.setVisibility(View.GONE);
-        mRefreshSrv.setRefreshing(false);
+        hideLoading();
 
         List<DiscoveryNovelData> dataList =
                 (List<DiscoveryNovelData>) mCache.getAsObject(KEY_CACHE_CN);
@@ -235,6 +252,15 @@ public class FemaleFragment extends BaseTabFragment<FemalePresenter>
             mNovelDataList.clear();
             mNovelDataList.addAll(dataList);
             mCategoryAdapter.notifyDataSetChanged();
+        }
+    }
+
+    private void hideLoading() {
+        if (mProgressBar != null) {
+            mProgressBar.setVisibility(View.GONE);
+        }
+        if (mRefreshSrv != null) {
+            mRefreshSrv.setRefreshing(false);
         }
     }
 

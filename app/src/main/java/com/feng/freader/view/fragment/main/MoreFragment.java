@@ -1,35 +1,30 @@
 package com.feng.freader.view.fragment.main;
 
-import android.content.Intent;
-import android.net.Uri;
 import android.view.View;
 import android.widget.TextView;
 
 import com.feng.freader.R;
 import com.feng.freader.base.BaseFragment;
 import com.feng.freader.base.BasePresenter;
+import com.feng.freader.constant.Constant;
 import com.feng.freader.constant.EventBusCode;
-import com.feng.freader.entity.bean.Version;
 import com.feng.freader.entity.eventbus.Event;
+import com.feng.freader.model.UpdateChecker;
+import com.feng.freader.model.UpdateInfo;
 import com.feng.freader.util.FileUtil;
 import com.feng.freader.util.NetUtil;
+import com.feng.freader.util.UpdateInstaller;
 import com.feng.freader.util.VersionUtil;
 import com.feng.freader.widget.TipDialog;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import cn.bmob.v3.BmobQuery;
-import cn.bmob.v3.exception.BmobException;
-import cn.bmob.v3.listener.QueryListener;
-
 /**
  * @author Feng Zhaohao
  * Created on 2019/10/20
  */
-public class MoreFragment extends BaseFragment implements View.OnClickListener{
-    private static final String TAG = "MoreFragment";
-
+public class MoreFragment extends BaseFragment implements View.OnClickListener {
     private View mCheckUpdateV;
     private TextView mVersionTv;
     private View mClearV;
@@ -47,7 +42,6 @@ public class MoreFragment extends BaseFragment implements View.OnClickListener{
 
     @Override
     protected void initData() {
-
     }
 
     @Override
@@ -91,73 +85,91 @@ public class MoreFragment extends BaseFragment implements View.OnClickListener{
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.v_more_check_update:
-                if (!NetUtil.hasInternet(getActivity())) {
-                    showShortToast("当前无网络，请检查网络后重试");
-                    break;
-                }
-                final int currVersionCode = VersionUtil.getVersionCode(getActivity());
-                BmobQuery<Version> bmobQuery = new BmobQuery<>();
-                bmobQuery.getObject("A7ht0006", new QueryListener<Version>() {
-                    @Override
-                    public void done(final Version version, BmobException e) {
-                        if (version != null) {
-                            if (version.getVersionCode() > currVersionCode) {
-                                new TipDialog.Builder(getActivity())
-                                        .setContent("检测到有新版本，是否进行更新（注意：更新后书架数据将清除）")
-                                        .setEnsure("是")
-                                        .setCancel("不了")
-                                        .setOnClickListener(new TipDialog.OnClickListener() {
-                                            @Override
-                                            public void clickEnsure() {
-                                                try {
-                                                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                                                    intent.setData(Uri.parse(version.getAddr()));
-                                                    startActivity(intent);
-                                                } catch (NullPointerException e) {
-                                                    showShortToast("抱歉，下载地址出错");
-                                                }
-                                            }
-
-                                            @Override
-                                            public void clickCancel() {
-
-                                            }
-                                        })
-                                        .build()
-                                        .show();
-                            } else {
-                                showShortToast("已经是最新版本");
-                            }
-                        } else {
-                            showShortToast("已经是最新版本");
-                        }
-                    }
-                });
+                checkUpdate();
                 break;
             case R.id.v_more_clear:
-                final TipDialog tipDialog = new TipDialog.Builder(getActivity())
-                        .setContent("是否清除缓存")
-                        .setCancel("否")
-                        .setEnsure("是")
-                        .setOnClickListener(new TipDialog.OnClickListener() {
-                            @Override
-                            public void clickEnsure() {
-                                FileUtil.clearLocalCache();
-                                mCacheSizeTv.setText(FileUtil.getLocalCacheSize());
-                            }
-
-                            @Override
-                            public void clickCancel() {
-
-                            }
-                        })
-                        .build();
-                tipDialog.show();
+                showClearCacheDialog();
                 break;
             case R.id.v_more_about:
                 break;
             default:
                 break;
         }
+    }
+
+    private void checkUpdate() {
+        if (!NetUtil.hasInternet(getActivity())) {
+            showShortToast("当前无网络，请检查网络后重试");
+            return;
+        }
+        final int currVersionCode = VersionUtil.getVersionCode(getActivity());
+        showShortToast("正在检查更新");
+        UpdateChecker.check(Constant.UPDATE_RELEASE_API_URL, new UpdateChecker.Callback() {
+            @Override
+            public void onSuccess(final UpdateInfo updateInfo) {
+                if (!updateInfo.isValid()) {
+                    showShortToast("没有找到可安装的更新包");
+                    return;
+                }
+                if (!updateInfo.isNewerThan(currVersionCode)) {
+                    showShortToast("已经是最新版本");
+                    return;
+                }
+                showUpdateDialog(updateInfo);
+            }
+
+            @Override
+            public void onError(String errorMsg) {
+                showShortToast("更新源暂时不可用");
+            }
+        });
+    }
+
+    private void showClearCacheDialog() {
+        TipDialog tipDialog = new TipDialog.Builder(getActivity())
+                .setContent("是否清除缓存")
+                .setCancel("否")
+                .setEnsure("是")
+                .setOnClickListener(new TipDialog.OnClickListener() {
+                    @Override
+                    public void clickEnsure() {
+                        FileUtil.clearLocalCache();
+                        mCacheSizeTv.setText(FileUtil.getLocalCacheSize());
+                    }
+
+                    @Override
+                    public void clickCancel() {
+                    }
+                })
+                .build();
+        tipDialog.show();
+    }
+
+    private void showUpdateDialog(final UpdateInfo updateInfo) {
+        String versionName = updateInfo.getVersionName();
+        String content = "检测到新版本";
+        if (!versionName.isEmpty()) {
+            content += " v" + versionName;
+        }
+        if (!updateInfo.getReleaseNotes().trim().isEmpty()) {
+            content += "\n\n" + updateInfo.getReleaseNotes();
+        }
+        content += "\n\n是否下载并安装更新？";
+        new TipDialog.Builder(getActivity())
+                .setContent(content)
+                .setEnsure("更新")
+                .setCancel("不了")
+                .setOnClickListener(new TipDialog.OnClickListener() {
+                    @Override
+                    public void clickEnsure() {
+                        UpdateInstaller.downloadAndInstall(getActivity(), updateInfo);
+                    }
+
+                    @Override
+                    public void clickCancel() {
+                    }
+                })
+                .build()
+                .show();
     }
 }

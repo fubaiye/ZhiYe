@@ -8,6 +8,7 @@ import com.feng.freader.entity.bean.CatalogBean;
 import com.feng.freader.entity.bean.CategoryNovelsBean;
 import com.feng.freader.entity.data.ANNovelData;
 import com.feng.freader.entity.data.CatalogData;
+import com.feng.freader.http.WikisourceApi;
 import com.feng.freader.http.OkhttpBuilder;
 import com.feng.freader.http.OkhttpCall;
 import com.feng.freader.http.OkhttpUtil;
@@ -33,6 +34,14 @@ public class CatalogModel implements ICatalogContract.Model {
     @Override
     public void getCatalogData(String url) {
         Log.d("fzh", "getCatalogData: url = " + url);
+        if (WikisourceApi.isWikisourceUrl(url)) {
+            List<String> chapterNameList = new ArrayList<>();
+            List<String> chapterUrlList = new ArrayList<>();
+            chapterNameList.add(WikisourceApi.titleFromSourceUrl(url));
+            chapterUrlList.add(url);
+            mPresenter.getCatalogDataSuccess(new CatalogData(chapterNameList, chapterUrlList));
+            return;
+        }
         OkhttpBuilder builder = new OkhttpBuilder.Builder()
                 .setUrl(url)
                 .setOkhttpCall(new OkhttpCall() {

@@ -21,6 +21,7 @@ import com.feng.freader.entity.eventbus.Event;
 import com.feng.freader.entity.eventbus.NovelIntroInitEvent;
 import com.feng.freader.presenter.SearchResultPresenter;
 import com.feng.freader.util.EventBusUtil;
+import com.feng.freader.util.LoadingRequestRunner;
 import com.feng.freader.view.activity.NovelIntroActivity;
 
 import java.util.List;
@@ -64,7 +65,7 @@ public class SearchResultFragment extends BaseFragment<SearchResultPresenter>
 
     @Override
     protected void doInOnCreate() {
-        mPresenter.getNovelsSource(mSearchContent);
+        requestSearch(mSearchContent);
     }
 
     @Override
@@ -138,7 +139,21 @@ public class SearchResultFragment extends BaseFragment<SearchResultPresenter>
     }
 
     public void update(String novelName) {
-        mPresenter.getNovelsSource(novelName);
-        mProgressBar.setVisibility(View.VISIBLE);
+        requestSearch(novelName);
+    }
+
+    private void requestSearch(final String novelName) {
+        LoadingRequestRunner.run(new Runnable() {
+            @Override
+            public void run() {
+                mNoneTv.setVisibility(View.GONE);
+                mProgressBar.setVisibility(View.VISIBLE);
+            }
+        }, new Runnable() {
+            @Override
+            public void run() {
+                mPresenter.getNovelsSource(novelName);
+            }
+        });
     }
 }
