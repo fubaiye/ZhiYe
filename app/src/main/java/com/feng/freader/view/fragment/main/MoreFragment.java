@@ -2,8 +2,11 @@ package com.feng.freader.view.fragment.main;
 
 import android.view.View;
 import android.widget.TextView;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.feng.freader.R;
+import com.feng.freader.backup.AppBackupManager;
 import com.feng.freader.base.BaseFragment;
 import com.feng.freader.base.BasePresenter;
 import com.feng.freader.constant.Constant;
@@ -31,6 +34,8 @@ public class MoreFragment extends BaseFragment implements View.OnClickListener {
     private View mClearV;
     private TextView mCacheSizeTv;
     private View mSourceManagerV;
+    private View mBackupV;
+    private View mRestoreV;
     private View mAboutV;
 
     @Override
@@ -60,6 +65,11 @@ public class MoreFragment extends BaseFragment implements View.OnClickListener {
 
         mSourceManagerV = getActivity().findViewById(R.id.v_more_source_manager);
         mSourceManagerV.setOnClickListener(this);
+
+        mBackupV = getActivity().findViewById(R.id.v_more_backup);
+        mBackupV.setOnClickListener(this);
+        mRestoreV = getActivity().findViewById(R.id.v_more_restore);
+        mRestoreV.setOnClickListener(this);
 
         mAboutV = getActivity().findViewById(R.id.v_more_about);
         mAboutV.setOnClickListener(this);
@@ -97,6 +107,12 @@ public class MoreFragment extends BaseFragment implements View.OnClickListener {
                 break;
             case R.id.v_more_source_manager:
                 jump2Activity(SourceManagerActivity.class);
+                break;
+            case R.id.v_more_backup:
+                backupData();
+                break;
+            case R.id.v_more_restore:
+                restoreData();
                 break;
             case R.id.v_more_about:
                 break;
@@ -151,6 +167,52 @@ public class MoreFragment extends BaseFragment implements View.OnClickListener {
                 })
                 .build();
         tipDialog.show();
+    }
+
+    private void backupData() {
+        showShortToast("正在备份");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String message;
+                try {
+                    message = "备份完成";
+                    new AppBackupManager(getActivity()).createBackup();
+                } catch (Throwable t) {
+                    message = "备份失败";
+                }
+                final String finalMessage = message;
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        showShortToast(finalMessage);
+                    }
+                });
+            }
+        }).start();
+    }
+
+    private void restoreData() {
+        showShortToast("正在恢复");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String message;
+                try {
+                    int count = new AppBackupManager(getActivity()).restoreLatestBackup();
+                    message = count > 0 ? "恢复完成" : "没有可恢复的数据";
+                } catch (Throwable t) {
+                    message = "恢复失败";
+                }
+                final String finalMessage = message;
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        showShortToast(finalMessage);
+                    }
+                });
+            }
+        }).start();
     }
 
     private void showUpdateDialog(final UpdateInfo updateInfo) {

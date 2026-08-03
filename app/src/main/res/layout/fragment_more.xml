@@ -201,6 +201,76 @@
         android:scaleType="fitCenter"
         android:layout_marginEnd="20dp"/>
 
+    <View
+        android:id="@+id/v_more_backup"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/more_function_height"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/v_more_source_manager"
+        android:background="@drawable/selector_more_function_bg"
+        android:clickable="true"
+        android:focusable="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/more_function_height"
+        app:layout_constraintStart_toStartOf="@id/v_more_backup"
+        app:layout_constraintTop_toTopOf="@id/v_more_backup"
+        app:layout_constraintBottom_toBottomOf="@id/v_more_backup"
+        android:layout_marginStart="70dp"
+        android:text="备份数据"
+        android:textSize="@dimen/more_text_size"
+        android:textColor="@color/more_text"
+        android:gravity="center"/>
+
+    <ImageView
+        android:layout_width="25dp"
+        android:layout_height="@dimen/more_function_height"
+        app:layout_constraintEnd_toEndOf="@id/v_more_backup"
+        app:layout_constraintTop_toTopOf="@id/v_more_backup"
+        app:layout_constraintBottom_toBottomOf="@id/v_more_backup"
+        android:paddingTop="@dimen/more_image_small_padding"
+        android:paddingBottom="@dimen/more_image_small_padding"
+        android:src="@drawable/more_next"
+        android:scaleType="fitCenter"
+        android:layout_marginEnd="20dp"/>
+
+    <View
+        android:id="@+id/v_more_restore"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/more_function_height"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/v_more_backup"
+        android:background="@drawable/selector_more_function_bg"
+        android:clickable="true"
+        android:focusable="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/more_function_height"
+        app:layout_constraintStart_toStartOf="@id/v_more_restore"
+        app:layout_constraintTop_toTopOf="@id/v_more_restore"
+        app:layout_constraintBottom_toBottomOf="@id/v_more_restore"
+        android:layout_marginStart="70dp"
+        android:text="恢复备份"
+        android:textSize="@dimen/more_text_size"
+        android:textColor="@color/more_text"
+        android:gravity="center"/>
+
+    <ImageView
+        android:layout_width="25dp"
+        android:layout_height="@dimen/more_function_height"
+        app:layout_constraintEnd_toEndOf="@id/v_more_restore"
+        app:layout_constraintTop_toTopOf="@id/v_more_restore"
+        app:layout_constraintBottom_toBottomOf="@id/v_more_restore"
+        android:paddingTop="@dimen/more_image_small_padding"
+        android:paddingBottom="@dimen/more_image_small_padding"
+        android:src="@drawable/more_next"
+        android:scaleType="fitCenter"
+        android:layout_marginEnd="20dp"/>
+
     <!-- more -->
 
     <View
@@ -209,7 +279,7 @@
         android:layout_height="@dimen/more_function_height"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/v_more_source_manager"
+        app:layout_constraintTop_toBottomOf="@id/v_more_restore"
         android:background="@drawable/selector_more_function_bg"
         android:clickable="true"
         android:focusable="true"
