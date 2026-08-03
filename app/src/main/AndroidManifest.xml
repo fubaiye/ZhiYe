@@ -25,6 +25,7 @@
         android:usesCleartextTraffic="false"
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".view.activity.AllNovelActivity"></activity>
+        <activity android:name=".view.activity.OnlineLibraryActivity" />
         <activity android:name=".view.activity.SourceManagerActivity" />
         <activity android:name=".view.activity.SourceDebuggerActivity" />
         <activity android:name=".view.activity.EpubCatalogActivity" />
@@ -49,6 +50,9 @@
 
         <service
             android:name=".download.NovelDownloadService"
+            android:exported="false" />
+        <service
+            android:name=".online.OnlineBookDownloadService"
             android:exported="false" />
 
         <provider

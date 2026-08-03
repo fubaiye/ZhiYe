@@ -18,6 +18,7 @@ import com.feng.freader.util.FileUtil;
 import com.feng.freader.util.NetUtil;
 import com.feng.freader.util.UpdateInstaller;
 import com.feng.freader.util.VersionUtil;
+import com.feng.freader.view.activity.OnlineLibraryActivity;
 import com.feng.freader.view.activity.SourceManagerActivity;
 import com.feng.freader.widget.TipDialog;
 
@@ -33,6 +34,7 @@ public class MoreFragment extends BaseFragment implements View.OnClickListener {
     private TextView mVersionTv;
     private View mClearV;
     private TextView mCacheSizeTv;
+    private View mOnlineLibraryV;
     private View mSourceManagerV;
     private View mBackupV;
     private View mRestoreV;
@@ -62,6 +64,9 @@ public class MoreFragment extends BaseFragment implements View.OnClickListener {
         mClearV.setOnClickListener(this);
         mCacheSizeTv = getActivity().findViewById(R.id.tv_more_cache_size);
         mCacheSizeTv.setText(FileUtil.getLocalCacheSize());
+
+        mOnlineLibraryV = getActivity().findViewById(R.id.v_more_online_library);
+        mOnlineLibraryV.setOnClickListener(this);
 
         mSourceManagerV = getActivity().findViewById(R.id.v_more_source_manager);
         mSourceManagerV.setOnClickListener(this);
@@ -104,6 +109,9 @@ public class MoreFragment extends BaseFragment implements View.OnClickListener {
                 break;
             case R.id.v_more_clear:
                 showClearCacheDialog();
+                break;
+            case R.id.v_more_online_library:
+                jump2Activity(OnlineLibraryActivity.class);
                 break;
             case R.id.v_more_source_manager:
                 jump2Activity(SourceManagerActivity.class);

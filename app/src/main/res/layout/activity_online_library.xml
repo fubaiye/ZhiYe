@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ll_online_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#F7F8FA"
+    android:paddingTop="28dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center"
+        android:text="在线书库"
+        android:textColor="#202124"
+        android:textSize="19sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:gravity="center_vertical">
+
+        <EditText
+            android:id="@+id/et_online_search"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:background="@drawable/shape_search_search_bar_bg"
+            android:hint="搜索公版书、古籍、开放图书"
+            android:singleLine="true"
+            android:textColor="#202124"
+            android:textColorHint="#9AA0A6"
+            android:textSize="14sp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
+        <TextView
+            android:id="@+id/tv_online_search"
+            android:layout_width="72dp"
+            android:layout_height="42dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/shape_discovery_all_book_bg"
+            android:gravity="center"
+            android:text="搜索"
+            android:textColor="#202124"
+            android:textSize="15sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp">
+
+        <Spinner
+            android:id="@+id/sp_online_source"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/tv_online_source_manager"
+            android:layout_width="92dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="书源管理"
+            android:textColor="#4B6F55"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_online_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:text="加载中"
+        android:textColor="#777777"
+        android:textSize="13sp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/ll_online_results"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp" />
+    </ScrollView>
+
+</LinearLayout>
