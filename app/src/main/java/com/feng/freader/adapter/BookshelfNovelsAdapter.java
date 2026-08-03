@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.feng.freader.R;
+import com.feng.freader.bookshelf.BookshelfMetaManager;
 import com.feng.freader.entity.data.BookshelfNovelDbData;
 import com.feng.freader.util.FileUtil;
 
@@ -69,7 +70,7 @@ public class BookshelfNovelsAdapter extends RecyclerView.Adapter {
         } else {
             contentViewHolder.checkBox.setVisibility(View.GONE);
         }
-        contentViewHolder.name.setText(mDataList.get(i).getName());
+        contentViewHolder.name.setText(new BookshelfMetaManager(mContext).labelFor(mDataList.get(i)));
         String cover = mDataList.get(i).getCover() == null ? "" : mDataList.get(i).getCover();
         if (mDataList.get(i).getType() == 0) {  // 网络小说
             Glide.with(mContext)

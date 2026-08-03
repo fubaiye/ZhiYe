@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
@@ -14,6 +15,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -22,6 +24,7 @@ import com.feng.freader.R;
 import com.feng.freader.adapter.BookshelfNovelsAdapter;
 import com.feng.freader.base.BaseFragment;
 import com.feng.freader.base.BasePresenter;
+import com.feng.freader.bookshelf.BookshelfMetaManager;
 import com.feng.freader.constant.EventBusCode;
 import com.feng.freader.constract.IBookshelfContract;
 import com.feng.freader.db.DatabaseManager;
@@ -77,6 +80,7 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
     private final Set<String> mEnrichingLocalBooks = new HashSet<>();
 
     private DatabaseManager mDbManager;
+    private BookshelfMetaManager mBookshelfMetaManager;
 
     @Override
     protected void doInOnCreate() {
@@ -97,6 +101,7 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
     @Override
     protected void initData() {
         mDbManager = DatabaseManager.getInstance();
+        mBookshelfMetaManager = new BookshelfMetaManager(getActivity());
     }
 
     @Override
@@ -305,6 +310,7 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
      */
     @Override
     public void queryAllBookSuccess(List<BookshelfNovelDbData> dataList) {
+        dataList = mBookshelfMetaManager.sort(dataList, BookshelfMetaManager.SORT_DEFAULT);
         if (mBookshelfNovelsAdapter == null) {
             mDataList = dataList;
             mCheckedList.clear();
@@ -385,6 +391,7 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
                         if (mIsDeleting) {
                             return;
                         }
+                        mBookshelfMetaManager.markRecent(mDataList.get(position).getNovelUrl());
                         Intent intent = new Intent(getActivity(), ReadActivity.class);
                         // 小说 url
                         intent.putExtra(ReadActivity.KEY_NOVEL_URL, mDataList.get(position).getNovelUrl());
@@ -419,6 +426,12 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
         popupMenu.getMenu().add(0, 1, 0, "导出 TXT");
         popupMenu.getMenu().add(0, 2, 1, "导出 EPUB");
         popupMenu.getMenu().add(0, 3, 2, "多选删除");
+        popupMenu.getMenu().add(0, 4, 3, "置顶/取消置顶");
+        popupMenu.getMenu().add(0, 5, 4, "收藏/取消收藏");
+        popupMenu.getMenu().add(0, 6, 5, "设置分类");
+        popupMenu.getMenu().add(0, 7, 6, "按最近排序");
+        popupMenu.getMenu().add(0, 8, 7, "按收藏排序");
+        popupMenu.getMenu().add(0, 9, 8, "按进度排序");
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -428,6 +441,32 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
                 }
                 if (item.getItemId() == 2) {
                     exportBook(position, ExportFormat.EPUB);
+                    return true;
+                }
+                if (item.getItemId() == 4) {
+                    mBookshelfMetaManager.togglePinned(mDataList.get(position).getNovelUrl());
+                    applyBookshelfSort(BookshelfMetaManager.SORT_DEFAULT);
+                    return true;
+                }
+                if (item.getItemId() == 5) {
+                    mBookshelfMetaManager.toggleFavorite(mDataList.get(position).getNovelUrl());
+                    applyBookshelfSort(BookshelfMetaManager.SORT_DEFAULT);
+                    return true;
+                }
+                if (item.getItemId() == 6) {
+                    showCategoryDialog(position);
+                    return true;
+                }
+                if (item.getItemId() == 7) {
+                    applyBookshelfSort(BookshelfMetaManager.SORT_RECENT);
+                    return true;
+                }
+                if (item.getItemId() == 8) {
+                    applyBookshelfSort(BookshelfMetaManager.SORT_FAVORITE);
+                    return true;
+                }
+                if (item.getItemId() == 9) {
+                    applyBookshelfSort(BookshelfMetaManager.SORT_PROGRESS);
                     return true;
                 }
                 startMultiDelete();
@@ -475,6 +514,40 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
                 });
             }
         }).start();
+    }
+
+    private void showCategoryDialog(final int position) {
+        if (position < 0 || position >= mDataList.size()) {
+            return;
+        }
+        final EditText editText = new EditText(getActivity());
+        editText.setHint("例如：玄幻、都市、待读");
+        new AlertDialog.Builder(getActivity())
+                .setTitle("设置分类")
+                .setView(editText)
+                .setNegativeButton("取消", null)
+                .setPositiveButton("保存", new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(android.content.DialogInterface dialog, int which) {
+                        mBookshelfMetaManager.setCategory(mDataList.get(position).getNovelUrl(),
+                                editText.getText().toString());
+                        applyBookshelfSort(BookshelfMetaManager.SORT_DEFAULT);
+                    }
+                })
+                .show();
+    }
+
+    private void applyBookshelfSort(int mode) {
+        List<BookshelfNovelDbData> sorted = mBookshelfMetaManager.sort(mDataList, mode);
+        mDataList.clear();
+        mDataList.addAll(sorted);
+        mCheckedList.clear();
+        for (int i = 0; i < mDataList.size(); i++) {
+            mCheckedList.add(false);
+        }
+        if (mBookshelfNovelsAdapter != null) {
+            mBookshelfNovelsAdapter.notifyDataSetChanged();
+        }
     }
 
     @Override
