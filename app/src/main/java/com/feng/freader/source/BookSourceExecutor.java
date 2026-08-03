@@ -1,0 +1,93 @@
+package com.feng.freader.source;
+
+import com.feng.freader.entity.data.NovelSourceData;
+
+import org.jsoup.nodes.Element;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class BookSourceExecutor {
+    private final SourceHttpClient httpClient;
+
+    public BookSourceExecutor() {
+        this(new SourceHttpClient());
+    }
+
+    BookSourceExecutor(SourceHttpClient httpClient) {
+        this.httpClient = httpClient;
+    }
+
+    public List<NovelSourceData> search(BookSource source, String keyword) throws IOException {
+        List<NovelSourceData> all = new ArrayList<>();
+        for (int page = source.getPagination().getStart(); page <= source.getPagination().getMax(); page++) {
+            String body = httpClient.execute(source, keyword, page);
+            all.addAll(parseSearchPage(source, body));
+        }
+        return all;
+    }
+
+    public List<NovelSourceData> parseSearchPage(BookSource source, String body) {
+        BookSource.SourceRules rules = source.getSearchRules();
+        List<NovelSourceData> results = new ArrayList<>();
+        if (rules.getList().startsWith("jsonpath:")) {
+            NovelSourceData item = fromBody(source, body, rules);
+            if (!item.getName().isEmpty() && !item.getUrl().isEmpty()) {
+                results.add(item);
+            }
+            return results;
+        }
+        List<Element> items = RuleEvaluator.selectElements(body, rules.getList());
+        for (Element element : items) {
+            NovelSourceData data = new NovelSourceData(
+                    transform(RuleEvaluator.evalElement(element, rules.getName()), rules.getJavaScript()),
+                    RuleEvaluator.evalElement(element, rules.getAuthor()),
+                    RuleEvaluator.evalElement(element, rules.getIntro()),
+                    absolute(source, RuleEvaluator.evalElement(element, rules.getUrl())),
+                    absolute(source, RuleEvaluator.evalElement(element, rules.getCover())));
+            data.setSourceId(source.getId());
+            data.setSourceName(source.getName());
+            if (!data.getName().isEmpty() && !data.getUrl().isEmpty()) {
+                results.add(data);
+            }
+        }
+        return results;
+    }
+
+    private NovelSourceData fromBody(BookSource source, String body, BookSource.SourceRules rules) {
+        NovelSourceData data = new NovelSourceData(
+                transform(RuleEvaluator.eval(body, rules.getName()), rules.getJavaScript()),
+                RuleEvaluator.eval(body, rules.getAuthor()),
+                RuleEvaluator.eval(body, rules.getIntro()),
+                absolute(source, RuleEvaluator.eval(body, rules.getUrl())),
+                absolute(source, RuleEvaluator.eval(body, rules.getCover())));
+        data.setSourceId(source.getId());
+        data.setSourceName(source.getName());
+        return data;
+    }
+
+    private String transform(String value, String javaScript) {
+        if (javaScript == null || javaScript.length() == 0) {
+            return value == null ? "" : value.trim();
+        }
+        return RuleEvaluator.applyJavaScript(value, javaScript).trim();
+    }
+
+    private String absolute(BookSource source, String value) {
+        if (value == null || value.length() == 0 || value.startsWith("http")) {
+            return value == null ? "" : value;
+        }
+        String host = source.getVariables().get("host");
+        if (host == null || host.length() == 0) {
+            return value;
+        }
+        if (host.endsWith("/") && value.startsWith("/")) {
+            return host.substring(0, host.length() - 1) + value;
+        }
+        if (!host.endsWith("/") && !value.startsWith("/")) {
+            return host + "/" + value;
+        }
+        return host + value;
+    }
+}

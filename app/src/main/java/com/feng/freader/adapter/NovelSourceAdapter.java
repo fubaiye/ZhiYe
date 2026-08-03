@@ -67,7 +67,9 @@ public class NovelSourceAdapter extends
         novelSourceViewHolder.author.setText(author);
 
         novelSourceViewHolder.introduce.setText(mNovelSourceDataList.get(i).getIntroduce());
-        novelSourceViewHolder.webSite.setText(mNovelSourceDataList.get(i).getUrl());
+        String sourceName = mNovelSourceDataList.get(i).getSourceName();
+        String badge = sourceName == null || sourceName.length() == 0 ? "书源" : sourceName;
+        novelSourceViewHolder.webSite.setText("[" + badge + "] " + mNovelSourceDataList.get(i).getUrl());
 
         novelSourceViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override

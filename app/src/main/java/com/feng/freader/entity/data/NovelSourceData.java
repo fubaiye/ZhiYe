@@ -9,7 +9,9 @@ public class NovelSourceData {
     private String author;
     private String introduce;
     private String url;
-    private String cover;   // 封面图片 url
+    private String cover;
+    private String sourceId;
+    private String sourceName;
 
     public NovelSourceData(String name, String author,
                            String introduce, String url, String cover) {
@@ -21,7 +23,7 @@ public class NovelSourceData {
     }
 
     public String getName() {
-        return name;
+        return empty(name);
     }
 
     public void setName(String name) {
@@ -29,7 +31,7 @@ public class NovelSourceData {
     }
 
     public String getAuthor() {
-        return author;
+        return empty(author);
     }
 
     public void setAuthor(String author) {
@@ -37,7 +39,7 @@ public class NovelSourceData {
     }
 
     public String getIntroduce() {
-        return introduce;
+        return empty(introduce);
     }
 
     public void setIntroduce(String introduce) {
@@ -45,7 +47,7 @@ public class NovelSourceData {
     }
 
     public String getUrl() {
-        return url;
+        return empty(url);
     }
 
     public void setUrl(String url) {
@@ -53,11 +55,27 @@ public class NovelSourceData {
     }
 
     public String getCover() {
-        return cover;
+        return empty(cover);
     }
 
     public void setCover(String cover) {
         this.cover = cover;
+    }
+
+    public String getSourceId() {
+        return empty(sourceId);
+    }
+
+    public void setSourceId(String sourceId) {
+        this.sourceId = sourceId;
+    }
+
+    public String getSourceName() {
+        return empty(sourceName);
+    }
+
+    public void setSourceName(String sourceName) {
+        this.sourceName = sourceName;
     }
 
     @Override
@@ -68,6 +86,12 @@ public class NovelSourceData {
                 ", introduce='" + introduce + '\'' +
                 ", url='" + url + '\'' +
                 ", cover='" + cover + '\'' +
+                ", sourceId='" + sourceId + '\'' +
+                ", sourceName='" + sourceName + '\'' +
                 '}';
+    }
+
+    private static String empty(String value) {
+        return value == null ? "" : value;
     }
 }

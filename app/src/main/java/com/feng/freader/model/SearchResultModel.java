@@ -1,5 +1,8 @@
 package com.feng.freader.model;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.feng.freader.constant.Constant;
 import com.feng.freader.constract.ISearchResultContract;
 import com.feng.freader.entity.bean.NovelsSourceBean;
@@ -9,6 +12,7 @@ import com.feng.freader.http.WikisourceApi;
 import com.feng.freader.httpUrlUtil.HttpUrlRequestBuilder;
 import com.feng.freader.httpUrlUtil.Request;
 import com.feng.freader.httpUrlUtil.Response;
+import com.feng.freader.source.AggregatedSearchEngine;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -20,27 +24,40 @@ import java.util.List;
  */
 public class SearchResultModel implements ISearchResultContract.Model {
 
-    private ISearchResultContract.Presenter mPresenter;
-    private Gson mGson = new Gson();
+    private final ISearchResultContract.Presenter mPresenter;
+    private final Gson mGson = new Gson();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public SearchResultModel(ISearchResultContract.Presenter mPresenter) {
         this.mPresenter = mPresenter;
     }
 
     @Override
-    public void getNovelsSource(String novelName) {
-        final String query = novelName;
+    public void getNovelsSource(final String novelName) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                List<NovelSourceData> aggregatedResults =
+                        new AggregatedSearchEngine().search(novelName);
+                if (!aggregatedResults.isEmpty()) {
+                    postSuccess(aggregatedResults);
+                    return;
+                }
+                searchLegacy(novelName);
+            }
+        }).start();
+    }
+
+    private void searchLegacy(final String novelName) {
         List<NovelSourceData> localResults = DiscoveryFallbackProvider.searchSources(novelName);
         if (!localResults.isEmpty()) {
-            mPresenter.getNovelsSourceSuccess(localResults);
+            postSuccess(localResults);
             return;
         }
 
-        // 构造请求
         Request request = new Request.Builder()
                 .setUrl(UrlObtainer.getNovelsSource(novelName))
                 .build();
-        // 执行请求
         HttpUrlRequestBuilder.getInstance()
                 .setRequest(request)
                 .setResponse(new Response() {
@@ -50,49 +67,60 @@ public class SearchResultModel implements ISearchResultContract.Model {
                             List<NovelSourceData> wikisourceResults =
                                     WikisourceApi.parseSearchResults(response);
                             if (!wikisourceResults.isEmpty()) {
-                                mPresenter.getNovelsSourceSuccess(wikisourceResults);
+                                postSuccess(wikisourceResults);
                                 return;
                             }
                             NovelsSourceBean novelsSourceBean = mGson.fromJson(response,
                                     NovelsSourceBean.class);
-                            if (novelsSourceBean == null) {
-                                mPresenter.getNovelsSourceError(Constant.NOT_FOUND_NOVELS);
+                            if (novelsSourceBean == null || novelsSourceBean.getCode() != 0) {
+                                postError(Constant.NOT_FOUND_NOVELS);
                                 return;
                             }
-                            int code = novelsSourceBean.getCode();
-                            if (code == 0) {
-                                // 请求成功
-                                List<NovelSourceData> novelSourceDataList = new ArrayList<>();
-                                List<NovelsSourceBean.ListBean> list = novelsSourceBean.getList();
-                                for (int i = 0; i < list.size(); i++) {
-                                    NovelsSourceBean.ListBean curr = list.get(i);
-                                    NovelSourceData novelSourceData = new NovelSourceData(curr.getName(),
-                                            curr.getAuthor(), curr.getIntroduce(), curr.getUrl(), curr.getCover());
-                                    novelSourceDataList.add(novelSourceData);
-                                }
-                                mPresenter.getNovelsSourceSuccess(novelSourceDataList);
-                            } else {
-                                // 请求失败，没有找到相关小说
-                                mPresenter.getNovelsSourceError(Constant.NOT_FOUND_NOVELS);
+                            List<NovelSourceData> novelSourceDataList = new ArrayList<>();
+                            List<NovelsSourceBean.ListBean> list = novelsSourceBean.getList();
+                            for (int i = 0; i < list.size(); i++) {
+                                NovelsSourceBean.ListBean curr = list.get(i);
+                                NovelSourceData data = new NovelSourceData(curr.getName(),
+                                        curr.getAuthor(), curr.getIntroduce(), curr.getUrl(), curr.getCover());
+                                data.setSourceName("默认源");
+                                novelSourceDataList.add(data);
                             }
+                            postSuccess(novelSourceDataList);
                         } catch (Throwable t) {
-                            mPresenter.getNovelsSourceError(Constant.NOT_FOUND_NOVELS);
+                            postError(Constant.NOT_FOUND_NOVELS);
                         }
                     }
 
                     @Override
                     public void error(String errorMsg) {
-                        // 请求失败，返回失败原因
                         List<NovelSourceData> fallbackResults =
-                                DiscoveryFallbackProvider.searchSources(query);
+                                DiscoveryFallbackProvider.searchSources(novelName);
                         if (!fallbackResults.isEmpty()) {
-                            mPresenter.getNovelsSourceSuccess(fallbackResults);
+                            postSuccess(fallbackResults);
                         } else {
-                            mPresenter.getNovelsSourceError(errorMsg);
+                            postError(errorMsg);
                         }
                     }
                 })
                 .build()
                 .doRequest();
+    }
+
+    private void postSuccess(final List<NovelSourceData> results) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mPresenter.getNovelsSourceSuccess(results);
+            }
+        });
+    }
+
+    private void postError(final String error) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mPresenter.getNovelsSourceError(error);
+            }
+        });
     }
 }
