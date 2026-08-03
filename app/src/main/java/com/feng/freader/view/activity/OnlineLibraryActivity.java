@@ -3,11 +3,15 @@ package com.feng.freader.view.activity;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AlertDialog;
+import android.text.InputType;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -70,7 +74,9 @@ public class OnlineLibraryActivity extends BaseActivity implements View.OnClickL
     @Override
     protected void initView() {
         StatusBarUtil.setLightColorStatusBar(this);
+        StatusBarUtil.applyStatusBarTopPadding(this, findViewById(R.id.ll_online_root));
         searchEt = findViewById(R.id.et_online_search);
+        configureSearchInput(searchEt);
         searchTv = findViewById(R.id.tv_online_search);
         statusTv = findViewById(R.id.tv_online_status);
         sourceSpinner = findViewById(R.id.sp_online_source);
@@ -78,6 +84,16 @@ public class OnlineLibraryActivity extends BaseActivity implements View.OnClickL
         resultLayout = findViewById(R.id.ll_online_results);
         searchTv.setOnClickListener(this);
         sourceManagerTv.setOnClickListener(this);
+        searchEt.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    search(searchEt.getText().toString());
+                    return true;
+                }
+                return false;
+            }
+        });
 
         List<String> names = new ArrayList<>();
         names.add("全部书源");
@@ -121,6 +137,15 @@ public class OnlineLibraryActivity extends BaseActivity implements View.OnClickL
                 }
             }
         }).start();
+    }
+
+    private void configureSearchInput(EditText editText) {
+        editText.setSingleLine(true);
+        editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        editText.setImeOptions(EditorInfo.IME_ACTION_SEARCH | EditorInfo.IME_FLAG_NO_EXTRACT_UI);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            editText.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO);
+        }
     }
 
     private void search(final String keyword) {

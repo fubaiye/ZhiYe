@@ -31,6 +31,8 @@
             android:layout_weight="1"
             android:background="@drawable/shape_search_search_bar_bg"
             android:hint="搜索公版书、古籍、开放图书"
+            android:imeOptions="actionSearch|flagNoExtractUi"
+            android:inputType="text|textNoSuggestions"
             android:singleLine="true"
             android:textColor="#202124"
             android:textColorHint="#9AA0A6"

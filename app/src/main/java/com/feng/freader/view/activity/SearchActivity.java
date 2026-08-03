@@ -1,9 +1,11 @@
 package com.feng.freader.view.activity;
 
+import android.os.Build;
 import android.os.Handler;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -80,6 +82,7 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
         mBackIv.setOnClickListener(this);
 
         mSearchBarEt = findViewById(R.id.et_search_search_bar);
+        configureSearchInput(mSearchBarEt);
         // 监听内容变化
         mSearchBarEt.addTextChangedListener(new TextWatcher() {
             @Override
@@ -114,10 +117,12 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 // 点击“完成”或者“下一项”
-                if (actionId == EditorInfo.IME_ACTION_DONE ||
+                if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                        actionId == EditorInfo.IME_ACTION_DONE ||
                         actionId == EditorInfo.IME_ACTION_NEXT) {
                     // 进行搜索操作
                     doSearch();
+                    return true;
                 }
                 return false;
             }
@@ -135,6 +140,7 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
         // 更改状态栏颜色
         StatusBarUtil.setLightColorStatusBar(this);
         getWindow().setStatusBarColor(getResources().getColor(R.color.search_bg));
+        StatusBarUtil.applyStatusBarTopPadding(this, findViewById(R.id.cl_search_root));
 
         String novelName = getIntent().getStringExtra(KEY_NOVEL_NAME);
         if (novelName != null) {
@@ -225,6 +231,15 @@ public class SearchActivity extends BaseActivity implements View.OnClickListener
     /**
      * 第一次进入搜索页面时，显示历史搜索 Fragment
      */
+    private void configureSearchInput(EditText editText) {
+        editText.setSingleLine(true);
+        editText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        editText.setImeOptions(EditorInfo.IME_ACTION_SEARCH | EditorInfo.IME_FLAG_NO_EXTRACT_UI);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            editText.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO);
+        }
+    }
+
     private void showHistoryFg() {
         if (mHistoryFragment == null) {
             mHistoryFragment = new HistoryFragment();

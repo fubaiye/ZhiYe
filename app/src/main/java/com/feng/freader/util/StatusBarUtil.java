@@ -56,4 +56,27 @@ public class StatusBarUtil {
         window.setStatusBarColor(Color.TRANSPARENT);
     }
 
+    public static void applyStatusBarTopPadding(Activity activity, View view) {
+        if (activity == null || view == null) {
+            return;
+        }
+        int statusBarHeight = getStatusBarHeight(activity);
+        view.setPadding(view.getPaddingLeft(),
+                StatusBarInsetPolicy.topPadding(view.getPaddingTop(), statusBarHeight),
+                view.getPaddingRight(),
+                view.getPaddingBottom());
+    }
+
+    public static int getStatusBarHeight(Activity activity) {
+        if (activity == null) {
+            return 0;
+        }
+        int resourceId = activity.getResources()
+                .getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId <= 0) {
+            return 0;
+        }
+        return activity.getResources().getDimensionPixelSize(resourceId);
+    }
+
 }
