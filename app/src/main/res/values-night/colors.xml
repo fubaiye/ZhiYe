@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#2F6B5F</color>
+    <color name="colorPrimaryDark">#18201E</color>
+    <color name="colorAccent">#78D5C0</color>
+    <color name="progress_bar">#78D5C0</color>
+
+    <color name="color_main_bottom_bar_bg">#161716</color>
+    <color name="color_main_bottom_bar_text">#D6D2CB</color>
+    <color name="color_main_bottom_bar_text_before">#AFAAA2</color>
+    <color name="color_main_bottom_bar_text_after">#F1B275</color>
+    <color name="color_main_bottom_bar_separator">#2A2D2B</color>
+
+    <color name="bookshelf_bg">#111312</color>
+    <color name="bookshelf_add_text">#ECE7DE</color>
+    <color name="bookshelf_multi_delete_bar_bg">#222522</color>
+    <color name="bookshelf_multi_delete_bar_text">#D6D2CB</color>
+
+    <color name="discovery_bg">#111312</color>
+    <color name="discovery_all_book_bg">#222522</color>
+    <color name="discovery_all_book_text_normal">#D6D2CB</color>
+    <color name="discovery_all_book_text_after_pressed">#FFFFFF</color>
+    <color name="discovery_search_bg">#222522</color>
+    <color name="discovery_search_text_indicator">#9D978D</color>
+
+    <color name="search_bg">#111312</color>
+    <color name="search_search_text">#ECE7DE</color>
+    <color name="search_search_bar_bg">#222522</color>
+    <color name="search_search_cursor">#78D5C0</color>
+    <color name="search_back_bg_pressed">#2C302D</color>
+    <color name="search_search_text_bg_pressed">#2C302D</color>
+
+    <color name="item_novel_source_name">#F3EFE6</color>
+    <color name="item_novel_source_author">#BDB7AD</color>
+    <color name="item_novel_source_introduce">#BDB7AD</color>
+    <color name="item_novel_source_web_size">#8F8A82</color>
+
+    <color name="more_bg">#111312</color>
+    <color name="more_text">#ECE7DE</color>
+    <color name="more_text_light">#88837C</color>
+    <color name="more_separator">#171A18</color>
+    <color name="more_function_pressed">#222522</color>
+
+    <color name="read_setting_bg">#1C1B19</color>
+    <color name="read_bottom_bar_text">#C8C1B7</color>
+    <color name="read_theme_0_bg">#1F241D</color>
+    <color name="read_theme_0_text">#D8D0BF</color>
+    <color name="read_theme_1_bg">#151515</color>
+    <color name="read_theme_1_text">#D8D0BF</color>
+    <color name="read_theme_2_bg">#17221B</color>
+    <color name="read_theme_2_text">#D8D0BF</color>
+    <color name="read_theme_3_bg">#101010</color>
+    <color name="read_theme_3_text">#D3D2CD</color>
+    <color name="read_theme_4_bg">#2B211F</color>
+    <color name="read_theme_4_text">#D8D0BF</color>
+</resources>
