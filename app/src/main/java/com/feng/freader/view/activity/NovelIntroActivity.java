@@ -20,6 +20,7 @@ import com.feng.freader.R;
 import com.feng.freader.base.BaseActivity;
 import com.feng.freader.base.BasePresenter;
 import com.feng.freader.constant.EventBusCode;
+import com.feng.freader.download.NovelDownloadService;
 import com.feng.freader.entity.data.NovelSourceData;
 import com.feng.freader.entity.eventbus.Event;
 import com.feng.freader.entity.eventbus.NovelIntroInitEvent;
@@ -202,6 +203,13 @@ public class NovelIntroActivity extends BaseActivity implements View.OnClickList
                                 } catch (ActivityNotFoundException e) {
                                     showShortToast("暂不支持在浏览器打开");
                                 }
+                                break;
+                            case R.id.menu_novel_intro_download:
+                                NovelDownloadService.enqueue(NovelIntroActivity.this,
+                                        mNovelSourceData.getName(),
+                                        mNovelSourceData.getUrl(),
+                                        mNovelSourceData.getCover());
+                                showShortToast("已加入离线下载队列");
                                 break;
                             default:
                                 break;

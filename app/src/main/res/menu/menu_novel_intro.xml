@@ -2,4 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/menu_novel_intro_show_in_browser"
         android:title="@string/menu_novel_intro_show_in_browser"/>
+    <item android:id="@+id/menu_novel_intro_download"
+        android:title="下载离线"/>
 </menu>

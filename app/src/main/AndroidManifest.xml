@@ -12,6 +12,7 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:name=".app.App"
@@ -43,6 +44,10 @@
         <activity
             android:name=".view.activity.ReadActivity"
             android:theme="@style/TransparentStatusBarTheme" />
+
+        <service
+            android:name=".download.NovelDownloadService"
+            android:exported="false" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"
