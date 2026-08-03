@@ -3,12 +3,16 @@ package com.feng.freader.view.fragment.main;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -24,6 +28,9 @@ import com.feng.freader.db.DatabaseManager;
 import com.feng.freader.entity.data.BookshelfNovelDbData;
 import com.feng.freader.entity.epub.OpfData;
 import com.feng.freader.entity.eventbus.Event;
+import com.feng.freader.export.BookExportResult;
+import com.feng.freader.export.BookExporter;
+import com.feng.freader.export.ExportFormat;
 import com.feng.freader.model.LocalBookMetadata;
 import com.feng.freader.model.LocalBookMetadataFetcher;
 import com.feng.freader.presenter.BookshelfPresenter;
@@ -399,9 +406,7 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
                         if (mIsDeleting) {
                             return;
                         }
-                        mBookshelfNovelsAdapter.setIsMultiDelete(true);
-                        mBookshelfNovelsAdapter.notifyDataSetChanged();
-                        mMultiDeleteRv.setVisibility(View.VISIBLE);
+                        showBookActionMenu(position);
                     }
                 });
     }
@@ -409,6 +414,69 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
     /**
      * 查询所有书籍信息失败
      */
+    private void showBookActionMenu(final int position) {
+        PopupMenu popupMenu = new PopupMenu(getActivity(), mBookshelfNovelsRv);
+        popupMenu.getMenu().add(0, 1, 0, "导出 TXT");
+        popupMenu.getMenu().add(0, 2, 1, "导出 EPUB");
+        popupMenu.getMenu().add(0, 3, 2, "多选删除");
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                if (item.getItemId() == 1) {
+                    exportBook(position, ExportFormat.TXT);
+                    return true;
+                }
+                if (item.getItemId() == 2) {
+                    exportBook(position, ExportFormat.EPUB);
+                    return true;
+                }
+                startMultiDelete();
+                return true;
+            }
+        });
+        popupMenu.show();
+    }
+
+    private void startMultiDelete() {
+        mBookshelfNovelsAdapter.setIsMultiDelete(true);
+        mBookshelfNovelsAdapter.notifyDataSetChanged();
+        mMultiDeleteRv.setVisibility(View.VISIBLE);
+    }
+
+    private void exportBook(final int position, final ExportFormat format) {
+        if (position < 0 || position >= mDataList.size()) {
+            return;
+        }
+        mLoadingRv.setVisibility(View.VISIBLE);
+        final BookshelfNovelDbData book = mDataList.get(position);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                BookExportResult result = null;
+                String error = "";
+                try {
+                    result = BookExporter.export(getActivity(), book, format);
+                } catch (Throwable t) {
+                    error = t.getMessage() == null ? "导出失败" : t.getMessage();
+                }
+                final BookExportResult finalResult = result;
+                final String finalError = error;
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mLoadingRv.setVisibility(View.GONE);
+                        if (finalResult != null) {
+                            mPresenter.queryAllBook();
+                            showShortToast("已导出并导入书架");
+                        } else {
+                            showShortToast(finalError);
+                        }
+                    }
+                });
+            }
+        }).start();
+    }
+
     @Override
     public void queryAllBookError(String errorMsg) {
 
