@@ -25,6 +25,8 @@
         android:usesCleartextTraffic="false"
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name=".view.activity.AllNovelActivity"></activity>
+        <activity android:name=".view.activity.SourceManagerActivity" />
+        <activity android:name=".view.activity.SourceDebuggerActivity" />
         <activity android:name=".view.activity.EpubCatalogActivity" />
         <activity android:name=".view.activity.CatalogActivity" />
         <activity android:name=".test.TestActivity"></activity>

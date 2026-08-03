@@ -15,6 +15,7 @@ import com.feng.freader.util.FileUtil;
 import com.feng.freader.util.NetUtil;
 import com.feng.freader.util.UpdateInstaller;
 import com.feng.freader.util.VersionUtil;
+import com.feng.freader.view.activity.SourceManagerActivity;
 import com.feng.freader.widget.TipDialog;
 
 import org.greenrobot.eventbus.Subscribe;
@@ -29,6 +30,7 @@ public class MoreFragment extends BaseFragment implements View.OnClickListener {
     private TextView mVersionTv;
     private View mClearV;
     private TextView mCacheSizeTv;
+    private View mSourceManagerV;
     private View mAboutV;
 
     @Override
@@ -55,6 +57,9 @@ public class MoreFragment extends BaseFragment implements View.OnClickListener {
         mClearV.setOnClickListener(this);
         mCacheSizeTv = getActivity().findViewById(R.id.tv_more_cache_size);
         mCacheSizeTv.setText(FileUtil.getLocalCacheSize());
+
+        mSourceManagerV = getActivity().findViewById(R.id.v_more_source_manager);
+        mSourceManagerV.setOnClickListener(this);
 
         mAboutV = getActivity().findViewById(R.id.v_more_about);
         mAboutV.setOnClickListener(this);
@@ -89,6 +94,9 @@ public class MoreFragment extends BaseFragment implements View.OnClickListener {
                 break;
             case R.id.v_more_clear:
                 showClearCacheDialog();
+                break;
+            case R.id.v_more_source_manager:
+                jump2Activity(SourceManagerActivity.class);
                 break;
             case R.id.v_more_about:
                 break;

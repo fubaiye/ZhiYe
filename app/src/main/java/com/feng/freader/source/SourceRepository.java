@@ -52,6 +52,10 @@ public class SourceRepository {
         preferences.edit().putString(KEY_JSON, BookSourceParser.toJson(sources)).apply();
     }
 
+    public String exportJson() {
+        return BookSourceParser.toJson(getAll());
+    }
+
     public int importJson(String json) {
         List<BookSource> incoming = BookSourceParser.parseList(json);
         if (incoming.isEmpty()) {
@@ -63,6 +67,33 @@ public class SourceRepository {
         }
         save(all);
         return incoming.size();
+    }
+
+    public void saveSource(BookSource source) {
+        List<BookSource> all = getAll();
+        upsert(all, source);
+        save(all);
+    }
+
+    public void setEnabled(String id, boolean enabled) {
+        List<BookSource> all = getAll();
+        for (BookSource source : all) {
+            if (source.getId().equals(id)) {
+                source.setEnabled(enabled);
+                break;
+            }
+        }
+        save(all);
+    }
+
+    public void delete(String id) {
+        List<BookSource> all = getAll();
+        for (int i = all.size() - 1; i >= 0; i--) {
+            if (all.get(i).getId().equals(id)) {
+                all.remove(i);
+            }
+        }
+        save(all);
     }
 
     private void upsert(List<BookSource> all, BookSource source) {

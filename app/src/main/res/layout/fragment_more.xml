@@ -154,6 +154,53 @@
         android:textColor="@color/more_text_light"
         android:gravity="center"/>
 
+    <View
+        android:id="@+id/v_more_source_manager"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/more_function_height"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/v_more_clear"
+        android:background="@drawable/selector_more_function_bg"
+        android:clickable="true"
+        android:focusable="true"/>
+
+    <ImageView
+        android:id="@+id/iv_more_source_manager"
+        android:layout_width="@dimen/more_function_height"
+        android:layout_height="@dimen/more_function_height"
+        app:layout_constraintStart_toStartOf="@id/v_more_source_manager"
+        app:layout_constraintTop_toTopOf="@id/v_more_source_manager"
+        app:layout_constraintBottom_toBottomOf="@id/v_more_source_manager"
+        android:padding="@dimen/more_image_padding"
+        android:src="@drawable/more_about"
+        android:scaleType="fitXY"
+        android:layout_marginStart="10dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/more_function_height"
+        app:layout_constraintStart_toEndOf="@id/iv_more_source_manager"
+        app:layout_constraintTop_toTopOf="@id/v_more_source_manager"
+        app:layout_constraintBottom_toBottomOf="@id/v_more_source_manager"
+        android:text="书源管理"
+        android:textSize="@dimen/more_text_size"
+        android:textColor="@color/more_text"
+        android:gravity="center"/>
+
+    <ImageView
+        android:id="@+id/iv_more_source_manager_next"
+        android:layout_width="25dp"
+        android:layout_height="@dimen/more_function_height"
+        app:layout_constraintEnd_toEndOf="@id/v_more_source_manager"
+        app:layout_constraintTop_toTopOf="@id/v_more_source_manager"
+        app:layout_constraintBottom_toBottomOf="@id/v_more_source_manager"
+        android:paddingTop="@dimen/more_image_small_padding"
+        android:paddingBottom="@dimen/more_image_small_padding"
+        android:src="@drawable/more_next"
+        android:scaleType="fitCenter"
+        android:layout_marginEnd="20dp"/>
+
     <!-- more -->
 
     <View
@@ -162,7 +209,7 @@
         android:layout_height="@dimen/more_function_height"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/v_more_clear"
+        app:layout_constraintTop_toBottomOf="@id/v_more_source_manager"
         android:background="@drawable/selector_more_function_bg"
         android:clickable="true"
         android:focusable="true"
