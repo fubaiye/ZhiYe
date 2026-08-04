@@ -29,6 +29,7 @@ import android.widget.VideoView;
 import com.feng.freader.R;
 import com.feng.freader.entity.data.CatalogData;
 import com.feng.freader.entity.epub.EpubData;
+import com.feng.freader.reader.PageBitmapPolicy;
 import com.feng.freader.util.ScreenUtil;
 
 import java.util.List;
@@ -244,6 +245,9 @@ public class RealPageView extends PageView{
 
         viewWidth = getWidth();
         viewHeight = getHeight();
+        if (changed && mContentABitmap == null && checkBeforeDraw()) {
+            updateBitmap();
+        }
     }
 
     @Override
@@ -1121,6 +1125,10 @@ public class RealPageView extends PageView{
      * 重新绘制 Bitmap
      */
     public void updateBitmap() {
+        if (!checkBeforeDraw() || !PageBitmapPolicy.canCreateBitmap(viewWidth, viewHeight)) {
+            invalidate();
+            return;
+        }
         if (mContentABitmap == null) {
             mContentABitmap = Bitmap.createBitmap(viewWidth, viewHeight, Bitmap.Config.RGB_565);
             mContentBBitmap = Bitmap.createBitmap(viewWidth, viewHeight, Bitmap.Config.RGB_565);
