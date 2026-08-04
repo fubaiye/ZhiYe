@@ -14,13 +14,31 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class AggregatedSearchEngine {
+    private static final int MAX_WORKERS = 48;
+    private static final long CACHE_TTL_MS = 10 * 60 * 1000L;
+    private static final int CACHE_MAX = 40;
+    private static final Map<String, CachedResults> CACHE = new LinkedHashMap<String, CachedResults>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, CachedResults> eldest) {
+            return size() > CACHE_MAX;
+        }
+    };
+
     private final BookSourceExecutor executor = new BookSourceExecutor();
 
     public List<NovelSourceData> search(String keyword) {
+        return search(keyword, Integer.MAX_VALUE, 8);
+    }
+
+    public List<NovelSourceData> search(String keyword, int maxSources, int timeoutSeconds) {
         final String query = keyword;
-        List<BookSource> sources = SourceRepository.getInstance().getEnabled();
+        List<NovelSourceData> cached = getCached(query, maxSources);
+        if (!cached.isEmpty()) {
+            return cached;
+        }
+        List<BookSource> sources = limitSources(SourceRepository.getInstance().getEnabled(), maxSources);
         final List<NovelSourceData> rawResults = Collections.synchronizedList(new ArrayList<NovelSourceData>());
-        ExecutorService pool = Executors.newFixedThreadPool(Math.max(1, Math.min(6, sources.size())));
+        ExecutorService pool = Executors.newFixedThreadPool(workerCount(sources.size()));
         final CountDownLatch latch = new CountDownLatch(sources.size());
         for (final BookSource source : sources) {
             pool.execute(new Runnable() {
@@ -36,13 +54,56 @@ public class AggregatedSearchEngine {
             });
         }
         try {
-            latch.await(15, TimeUnit.SECONDS);
+            latch.await(Math.max(1, timeoutSeconds), TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
             pool.shutdownNow();
         }
-        return sortAndDedupe(rawResults, query);
+        List<NovelSourceData> results = sortAndDedupe(rawResults, query);
+        putCached(query, maxSources, results);
+        return results;
+    }
+
+    public static List<BookSource> limitSources(List<BookSource> sources, int maxSources) {
+        if (sources == null || sources.isEmpty()) {
+            return new ArrayList<>();
+        }
+        int end = maxSources <= 0 ? sources.size() : Math.min(sources.size(), maxSources);
+        return new ArrayList<>(sources.subList(0, end));
+    }
+
+    private static int workerCount(int sourceCount) {
+        if (sourceCount <= 0) {
+            return 1;
+        }
+        if (sourceCount <= 6) {
+            return sourceCount;
+        }
+        return Math.min(MAX_WORKERS, Math.max(8, sourceCount / 20));
+    }
+
+    private static List<NovelSourceData> getCached(String keyword, int maxSources) {
+        synchronized (CACHE) {
+            CachedResults cached = CACHE.get(cacheKey(keyword, maxSources));
+            if (cached == null || System.currentTimeMillis() - cached.createdAt > CACHE_TTL_MS) {
+                return new ArrayList<>();
+            }
+            return new ArrayList<>(cached.results);
+        }
+    }
+
+    private static void putCached(String keyword, int maxSources, List<NovelSourceData> results) {
+        if (results == null || results.isEmpty()) {
+            return;
+        }
+        synchronized (CACHE) {
+            CACHE.put(cacheKey(keyword, maxSources), new CachedResults(results));
+        }
+    }
+
+    private static String cacheKey(String keyword, int maxSources) {
+        return safe(keyword).trim() + "|" + maxSources;
     }
 
     public static List<NovelSourceData> sortAndDedupe(List<NovelSourceData> rawResults, final String keyword) {
@@ -84,5 +145,14 @@ public class AggregatedSearchEngine {
 
     private static String safe(String value) {
         return value == null ? "" : value;
+    }
+
+    private static class CachedResults {
+        final long createdAt = System.currentTimeMillis();
+        final List<NovelSourceData> results;
+
+        CachedResults(List<NovelSourceData> results) {
+            this.results = new ArrayList<>(results);
+        }
     }
 }

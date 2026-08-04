@@ -158,6 +158,8 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
     private boolean mIsShowSettingBar = false;      // 是否正在显示设置栏
     private boolean mIsNeedWrite2Db = true;         // 活动结束时是否需要将书籍信息写入数据库
     private boolean mIsUpdateChapter = false;   // 是否更新章节
+    private boolean mJumpToChapterEnd = false;
+
 
     // 从 sp 中读取
     private float mTextSize;    // 字体大小
@@ -580,6 +582,11 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         }
         mStateTv.setVisibility(View.GONE);
         mPageView.initDrawText(data.getContent(), mPosition);
+        if (mJumpToChapterEnd) {
+            mPageView.jumpToLastTextPage();
+            mPosition = mPageView.getPosition();
+            mJumpToChapterEnd = false;
+        }
         mNovelTitleTv.setText(data.getName());
         updateChapterProgress();
     }
@@ -590,6 +597,8 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
     @Override
     public void getDetailedChapterDataError(String errorMsg) {
         mIsLoadingChapter = false;
+        mJumpToChapterEnd = false;
+        mStateTv.setVisibility(View.VISIBLE);
         mStateTv.setText("获取失败，请检查网络后重新加载");
     }
 
@@ -673,7 +682,7 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
                 mPosition = 0;
                 mSecondPosition = 0;
                 mIsLoadingChapter = true;
-                mStateTv.setText(LOADING_TEXT);
+                mStateTv.setVisibility(View.GONE);
                 mPresenter.getEpubChapterData(mParentPath, mOpfData.getSpine().get(mChapterIndex));
                 updateChapterProgress();
                 return;
@@ -684,6 +693,12 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         mStateTv.setVisibility(View.GONE);
         // 通知 PageView 绘制章节数据
         mPageView.initDrawEpub(dataList, mPosition, mSecondPosition);
+        if (mJumpToChapterEnd) {
+            mPageView.jumpToLastEpubPage();
+            mPosition = mPageView.getFirstPos();
+            mSecondPosition = mPageView.getSecondPos();
+            mJumpToChapterEnd = false;
+        }
         // 设置该节的名称
         String title = dataList.get(0).getType() == EpubData.TYPE.TITLE?
                 dataList.get(0).getData() : "";
@@ -697,6 +712,8 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
     @Override
     public void getEpubChapterDataError(String errorMsg) {
         mIsLoadingChapter = false;
+        mJumpToChapterEnd = false;
+        mStateTv.setVisibility(View.VISIBLE);
         mStateTv.setText("读取失败");
     }
 
@@ -708,40 +725,41 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
             return;
         }
         if (mType == 0) {   // 显示网络小说
-            mPosition = 0;     // 归零
-            mPageView.clear();              // 清除当前文字
-            mStateTv.setVisibility(View.VISIBLE);
-            mStateTv.setText(LOADING_TEXT);
+            if (!mJumpToChapterEnd) {
+                mPosition = 0;
+            }
+            mStateTv.setVisibility(View.GONE);
             mIsLoadingChapter = true;
             if (!mChapterUrlList.isEmpty()) {
-                new Handler().postDelayed(new Runnable() {
+                new Handler().post(new Runnable() {
                     @Override
                     public void run() {
                         mPresenter.getDetailedChapterData(UrlObtainer.getDetailedChapter(
                                 mChapterUrlList.get(mChapterIndex)));
                     }
-                }, 200);
+                });
             } else {
                 mStateTv.setText("加载失败");
+                mStateTv.setVisibility(View.VISIBLE);
                 mIsLoadingChapter = false;
             }
         } else if (mType == 2) {    // 显示 epub 小说
-            // 记得归零！！！
-            mPosition = 0;
-            mSecondPosition = 0;
-            mPageView.clear();              // 清除当前文字或图片
-            mStateTv.setVisibility(View.VISIBLE);
-            mStateTv.setText(LOADING_TEXT);
+            if (!mJumpToChapterEnd) {
+                mPosition = 0;
+                mSecondPosition = 0;
+            }
+            mStateTv.setVisibility(View.GONE);
             mIsLoadingChapter = true;
             if (mOpfData != null) {
-                new Handler().postDelayed(new Runnable() {
+                new Handler().post(new Runnable() {
                     @Override
                     public void run() {
                         mPresenter.getEpubChapterData(mParentPath, mOpfData.getSpine().get(mChapterIndex));
                     }
-                }, 200);
+                });
             } else {
                 mStateTv.setText("加载失败");
+                mStateTv.setVisibility(View.VISIBLE);
                 mIsLoadingChapter = false;
             }
         }
@@ -1364,6 +1382,7 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
             return;
         }
         // 加载上一章节
+        mJumpToChapterEnd = true;
         mChapterIndex--;
         showChapter();
     }
@@ -1377,6 +1396,7 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
             return;
         }
         // 加载上一章节
+        mJumpToChapterEnd = true;
         mChapterIndex--;
         showChapter();
     }
@@ -1390,6 +1410,7 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
             return;
         }
         // 加载下一章节
+        mJumpToChapterEnd = false;
         mChapterIndex++;
         showChapter();
     }
@@ -1403,6 +1424,7 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
             return;
         }
         // 加载下一章节
+        mJumpToChapterEnd = false;
         mChapterIndex++;
         showChapter();
     }

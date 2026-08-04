@@ -46,7 +46,14 @@ public class FemaleModel implements IFemaleContract.Model {
      */
     @Override
     public void getHotRankData() {
-        mPresenter.getHotRankDataSuccess(DiscoveryFallbackProvider.femaleRanks());
+        new DiscoverySourceProvider().loadRanks(DiscoverySourceProvider.femaleRankKeywords(),
+                DiscoveryFallbackProvider.femaleRanks(),
+                new DiscoverySourceProvider.Callback<List<List<String>>>() {
+                    @Override
+                    public void onResult(List<List<String>> data) {
+                        mPresenter.getHotRankDataSuccess(data);
+                    }
+                });
         return;
         /*
         final List<List<String>> novelNameList = new ArrayList<>();
@@ -108,7 +115,14 @@ public class FemaleModel implements IFemaleContract.Model {
      */
     @Override
     public void getCategoryNovels() {
-        mPresenter.getCategoryNovelsSuccess(DiscoveryFallbackProvider.femaleCategories());
+        new DiscoverySourceProvider().loadCategories(DiscoverySourceProvider.femaleCategoryKeywords(),
+                DiscoveryFallbackProvider.femaleCategories(),
+                new DiscoverySourceProvider.Callback<List<DiscoveryNovelData>>() {
+                    @Override
+                    public void onResult(List<DiscoveryNovelData> data) {
+                        mPresenter.getCategoryNovelsSuccess(data);
+                    }
+                });
         return;
         /*
         final List<DiscoveryNovelData> dataList = new ArrayList<>();

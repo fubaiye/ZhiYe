@@ -111,6 +111,13 @@
                     android:text="调试" />
             </LinearLayout>
 
+            <Button
+                android:id="@+id/btn_source_manager_enable_all"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:text="全部开启" />
+
             <LinearLayout
                 android:id="@+id/ll_source_manager_list"
                 android:layout_width="match_parent"

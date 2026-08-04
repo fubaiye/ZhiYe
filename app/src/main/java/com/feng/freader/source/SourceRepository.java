@@ -101,6 +101,15 @@ public class SourceRepository {
         save(all);
     }
 
+    public int setAllEnabled(boolean enabled) {
+        List<BookSource> all = getAll();
+        for (BookSource source : all) {
+            source.setEnabled(enabled);
+        }
+        save(all);
+        return all.size();
+    }
+
     public void delete(String id) {
         List<BookSource> all = getAll();
         for (int i = all.size() - 1; i >= 0; i--) {

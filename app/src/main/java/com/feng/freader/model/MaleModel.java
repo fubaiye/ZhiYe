@@ -37,7 +37,14 @@ public class MaleModel implements IMaleContract.Model {
      */
     @Override
     public void getHotRankData() {
-        mPresenter.getHotRankDataSuccess(DiscoveryFallbackProvider.maleRanks());
+        new DiscoverySourceProvider().loadRanks(DiscoverySourceProvider.maleRankKeywords(),
+                DiscoveryFallbackProvider.maleRanks(),
+                new DiscoverySourceProvider.Callback<List<List<String>>>() {
+                    @Override
+                    public void onResult(List<List<String>> data) {
+                        mPresenter.getHotRankDataSuccess(data);
+                    }
+                });
         return;
         /*
         final List<List<String>> novelNameList = new ArrayList<>();
@@ -100,7 +107,14 @@ public class MaleModel implements IMaleContract.Model {
      */
     @Override
     public void getCategoryNovels() {
-        mPresenter.getCategoryNovelsSuccess(DiscoveryFallbackProvider.maleCategories());
+        new DiscoverySourceProvider().loadCategories(DiscoverySourceProvider.maleCategoryKeywords(),
+                DiscoveryFallbackProvider.maleCategories(),
+                new DiscoverySourceProvider.Callback<List<DiscoveryNovelData>>() {
+                    @Override
+                    public void onResult(List<DiscoveryNovelData> data) {
+                        mPresenter.getCategoryNovelsSuccess(data);
+                    }
+                });
         return;
         /*
         final List<DiscoveryNovelData> dataList = new ArrayList<>();

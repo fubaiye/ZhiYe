@@ -72,6 +72,7 @@ public class SourceManagerActivity extends BaseActivity implements View.OnClickL
         findViewById(R.id.btn_source_manager_save).setOnClickListener(this);
         findViewById(R.id.btn_source_manager_export).setOnClickListener(this);
         findViewById(R.id.btn_source_manager_debug).setOnClickListener(this);
+        findViewById(R.id.btn_source_manager_enable_all).setOnClickListener(this);
         mJsonEt = findViewById(R.id.et_source_manager_json);
         mUrlEt = findViewById(R.id.et_source_manager_url);
         mListLl = findViewById(R.id.ll_source_manager_list);
@@ -111,9 +112,18 @@ public class SourceManagerActivity extends BaseActivity implements View.OnClickL
             case R.id.btn_source_manager_debug:
                 startActivity(new Intent(this, SourceDebuggerActivity.class));
                 break;
+            case R.id.btn_source_manager_enable_all:
+                enableAllSources();
+                break;
             default:
                 break;
         }
+    }
+
+    private void enableAllSources() {
+        int count = mRepository.setAllEnabled(true);
+        refreshList();
+        showShortToast("已开启全部书源：" + count);
     }
 
     private void importFromClipboard() {

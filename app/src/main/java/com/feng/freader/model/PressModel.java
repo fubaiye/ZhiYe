@@ -34,7 +34,14 @@ public class PressModel implements IPressContract.Model {
      */
     @Override
     public void getCategoryNovels() {
-        mPresenter.getCategoryNovelsSuccess(DiscoveryFallbackProvider.pressCategories());
+        new DiscoverySourceProvider().loadCategories(DiscoverySourceProvider.pressCategoryKeywords(),
+                DiscoveryFallbackProvider.pressCategories(),
+                new DiscoverySourceProvider.Callback<List<DiscoveryNovelData>>() {
+                    @Override
+                    public void onResult(List<DiscoveryNovelData> data) {
+                        mPresenter.getCategoryNovelsSuccess(data);
+                    }
+                });
         return;
         /*
         final List<DiscoveryNovelData> dataList = new ArrayList<>();

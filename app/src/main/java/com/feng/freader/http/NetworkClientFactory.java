@@ -25,9 +25,9 @@ public class NetworkClientFactory {
                     Cache cache = new Cache(cacheDir, 32L * 1024L * 1024L);
                     client = new OkHttpClient.Builder()
                             .cache(cache)
-                            .connectTimeout(10, TimeUnit.SECONDS)
-                            .readTimeout(15, TimeUnit.SECONDS)
-                            .writeTimeout(15, TimeUnit.SECONDS)
+                            .connectTimeout(4, TimeUnit.SECONDS)
+                            .readTimeout(8, TimeUnit.SECONDS)
+                            .writeTimeout(8, TimeUnit.SECONDS)
                             .retryOnConnectionFailure(true)
                             .build();
                 }

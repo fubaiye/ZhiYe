@@ -664,12 +664,36 @@ public class PageView extends View {
         this.mPosition = mPosition;
     }
 
+    public void jumpToLastTextPage() {
+        if (mContent == null || mContent.length() == 0) {
+            return;
+        }
+        mPosition = mContent.length();
+        mPageIndex = 0;
+        mFirstPosMap.clear();
+        updatePrePosTxt();
+        invalidate();
+    }
+
     public int getFirstPos() {
         return mFirstPos;
     }
 
     public int getSecondPos() {
         return mSecondPos;
+    }
+
+    public void jumpToLastEpubPage() {
+        if (mEpubDataList == null || mEpubDataList.isEmpty()) {
+            return;
+        }
+        mFirstPos = mEpubDataList.size();
+        mSecondPos = 0;
+        mPageIndex = 0;
+        mFirstPosMap.clear();
+        mSecondPosMap.clear();
+        updatePrePosEpub();
+        invalidate();
     }
 
     /**

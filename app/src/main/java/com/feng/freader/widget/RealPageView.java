@@ -1121,6 +1121,18 @@ public class RealPageView extends PageView{
         pathCPaint.setColor(color);
     }
 
+    @Override
+    public void jumpToLastTextPage() {
+        super.jumpToLastTextPage();
+        updateBitmap();
+    }
+
+    @Override
+    public void jumpToLastEpubPage() {
+        super.jumpToLastEpubPage();
+        updateBitmap();
+    }
+
     /**
      * 重新绘制 Bitmap
      */
