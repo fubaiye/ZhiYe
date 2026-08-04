@@ -91,6 +91,20 @@
             android:padding="13dp"
             android:layout_marginEnd="5dp"/>
 
+        <TextView
+            android:id="@+id/tv_read_bar_chapter_title"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="82dp"
+            android:layout_marginEnd="82dp"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:maxLines="1"
+            android:textColor="@color/read_bottom_bar_text"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
     </RelativeLayout>
 
     <!-- bottom bar -->

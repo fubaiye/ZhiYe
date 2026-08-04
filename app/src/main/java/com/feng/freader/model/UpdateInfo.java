@@ -12,11 +12,13 @@ import java.util.regex.Pattern;
 public class UpdateInfo {
     private static final Pattern VERSION_CODE_PATTERN =
             Pattern.compile("(?:code|vc|versionCode)[-_+]?([0-9]+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern SEMVER_PATTERN =
+            Pattern.compile("v?([0-9]+)(?:\\.([0-9]+))?(?:\\.([0-9]+))?", Pattern.CASE_INSENSITIVE);
     private static final Pattern RELEASE_DOWNLOAD_PATTERN = Pattern.compile(
-            "(https://github\\.com)?(/fubaiye/ZhiYe/releases/download/([^/\"'<>\\s]+)/([^/\"'<>\\s]+\\.apk))",
+            "(https://github\\.com)?(/[^/\"'<>\\s]+/[^/\"'<>\\s]+/releases/download/([^/\"'<>\\s]+)/([^/\"'<>\\s]+\\.apk))",
             Pattern.CASE_INSENSITIVE);
     private static final Pattern RELEASE_TAG_PATTERN = Pattern.compile(
-            "/fubaiye/ZhiYe/releases/tag/([^\"'<>\\s]+)",
+            "/[^/\"'<>\\s]+/[^/\"'<>\\s]+/releases/tag/([^\"'<>\\s]+)",
             Pattern.CASE_INSENSITIVE);
 
     private int versionCode;
@@ -179,13 +181,37 @@ public class UpdateInfo {
 
     private static int parseVersionCode(String text) {
         Matcher matcher = VERSION_CODE_PATTERN.matcher(emptyIfNull(text));
-        if (!matcher.find()) {
+        if (matcher.find()) {
+            try {
+                return Integer.parseInt(matcher.group(1));
+            } catch (NumberFormatException ignored) {
+                return 0;
+            }
+        }
+        Matcher semver = SEMVER_PATTERN.matcher(emptyIfNull(text));
+        if (!semver.find()) {
             return 0;
         }
         try {
-            return Integer.parseInt(matcher.group(1));
-        } catch (NumberFormatException ignored) {
+            int major = parsePart(semver.group(1));
+            int minor = parsePart(semver.group(2));
+            int patch = parsePart(semver.group(3));
+            if (major == 1 && minor > 0 && patch == 0) {
+                return minor;
+            }
+            if (minor == 0 && patch == 0) {
+                return major;
+            }
+            return major * 10000 + minor * 100 + patch;
+        } catch (Throwable ignored) {
             return 0;
         }
+    }
+
+    private static int parsePart(String value) {
+        if (value == null || value.length() == 0) {
+            return 0;
+        }
+        return Integer.parseInt(value);
     }
 }

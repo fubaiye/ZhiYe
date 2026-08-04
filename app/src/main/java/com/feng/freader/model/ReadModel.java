@@ -15,6 +15,10 @@ import com.feng.freader.http.OkhttpBuilder;
 import com.feng.freader.http.OkhttpCall;
 import com.feng.freader.http.OkhttpUtil;
 import com.feng.freader.http.WikisourceApi;
+import com.feng.freader.source.BookSource;
+import com.feng.freader.source.BookSourceExecutor;
+import com.feng.freader.source.SourceBookLink;
+import com.feng.freader.source.SourceRepository;
 import com.feng.freader.util.EpubUtils;
 import com.feng.freader.util.TextFileDecoder;
 import com.google.gson.Gson;
@@ -54,6 +58,10 @@ public class ReadModel implements IReadContract.Model {
 
     @Override
     public void getChapterList(String url) {
+        if (SourceBookLink.isSourceLink(url)) {
+            getSourceChapterList(url);
+            return;
+        }
         if (WikisourceApi.isWikisourceUrl(url)) {
             List<String> chapterUrlList = new ArrayList<>();
             List<String> chapterNameList = new ArrayList<>();
@@ -93,6 +101,10 @@ public class ReadModel implements IReadContract.Model {
 
     @Override
     public void getDetailedChapterData(String url) {
+        if (SourceBookLink.isSourceLink(url)) {
+            getSourceDetailedChapterData(url);
+            return;
+        }
         final boolean isWikisourcePage = WikisourceApi.isWikisourcePageTextUrl(url);
         OkhttpBuilder builder = new OkhttpBuilder.Builder()
                 .setUrl(url)
@@ -135,6 +147,91 @@ public class ReadModel implements IReadContract.Model {
                 })
                 .build();
         OkhttpUtil.getRequest(builder);
+    }
+
+    private void getSourceChapterList(final String url) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    BookSource source = SourceRepository.getInstance()
+                            .findById(SourceBookLink.sourceId(url));
+                    if (source == null) {
+                        postChapterListError("书源不存在");
+                        return;
+                    }
+                    com.feng.freader.entity.data.CatalogData data =
+                            new BookSourceExecutor().catalog(source, url);
+                    if (data == null || data.getChapterUrlList().isEmpty()) {
+                        postChapterListError("未找到目录");
+                        return;
+                    }
+                    postChapterListSuccess(data.getChapterUrlList(), data.getChapterNameList());
+                } catch (Throwable t) {
+                    postChapterListError(t.getMessage());
+                }
+            }
+        }).start();
+    }
+
+    private void getSourceDetailedChapterData(final String url) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    BookSource source = SourceRepository.getInstance()
+                            .findById(SourceBookLink.sourceId(url));
+                    if (source == null) {
+                        postDetailedChapterError("书源不存在");
+                        return;
+                    }
+                    DetailedChapterData data = new BookSourceExecutor().content(source, url);
+                    if (data == null || data.getContent() == null || data.getContent().trim().length() == 0) {
+                        postDetailedChapterError("本章无数据");
+                        return;
+                    }
+                    postDetailedChapterSuccess(data);
+                } catch (Throwable t) {
+                    postDetailedChapterError(t.getMessage());
+                }
+            }
+        }).start();
+    }
+
+    private void postChapterListSuccess(final List<String> urls, final List<String> names) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                mPresenter.getChapterUrlListSuccess(urls, names);
+            }
+        });
+    }
+
+    private void postChapterListError(final String error) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                mPresenter.getChapterUrlListError(error == null ? "" : error);
+            }
+        });
+    }
+
+    private void postDetailedChapterSuccess(final DetailedChapterData data) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                mPresenter.getDetailedChapterDataSuccess(data);
+            }
+        });
+    }
+
+    private void postDetailedChapterError(final String error) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                mPresenter.getDetailedChapterDataError(error == null ? "" : error);
+            }
+        });
     }
 
     @Override

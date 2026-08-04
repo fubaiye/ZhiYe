@@ -34,12 +34,19 @@ public class RuleEvaluator {
     }
 
     public static List<Element> selectElements(String body, String rule) {
+        if (rule == null || rule.trim().length() == 0 || rule.startsWith("jsonpath:")
+                || rule.startsWith("xpath:") || rule.startsWith("javascript:")) {
+            return new ArrayList<>();
+        }
         String rawRule = stripPrefix(rule, "css:");
         if (rawRule.equals(rule) && !rule.startsWith("css:")) {
             rawRule = rule;
         }
         int attrIndex = rawRule.indexOf('@');
         String selector = attrIndex >= 0 ? rawRule.substring(0, attrIndex) : rawRule;
+        if (selector.trim().length() == 0) {
+            return new ArrayList<>();
+        }
         Elements elements = Jsoup.parse(body == null ? "" : body).select(selector);
         return new ArrayList<>(elements);
     }
@@ -89,8 +96,7 @@ public class RuleEvaluator {
             return "";
         }
         if (rule.startsWith("css:")) {
-            List<Element> elements = selectElements(body, rule);
-            return elements.isEmpty() ? "" : evalElement(elements.get(0), rule);
+            return evalCss(Jsoup.parse(body == null ? "" : body), stripPrefix(rule, "css:"));
         }
         if (rule.startsWith("xpath:")) {
             return evalXPath(body, stripPrefix(rule, "xpath:"));

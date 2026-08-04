@@ -18,8 +18,16 @@ public class DiscoveryFallbackProviderTest {
         List<NovelSourceData> results = DiscoveryFallbackProvider.searchSources("狂人日记");
 
         assertFalse(results.isEmpty());
-        assertEquals("狂人日記", results.get(0).getName());
+        assertEquals("狂人日记", results.get(0).getName());
         assertTrue(WikisourceApi.isWikisourceUrl(results.get(0).getUrl()));
+    }
+
+    @Test
+    public void searchFindsTraditionalAlias() {
+        List<NovelSourceData> results = DiscoveryFallbackProvider.searchSources("狂人日記");
+
+        assertFalse(results.isEmpty());
+        assertEquals("狂人日记", results.get(0).getName());
     }
 
     @Test

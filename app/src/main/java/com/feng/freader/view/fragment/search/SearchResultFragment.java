@@ -122,6 +122,11 @@ public class SearchResultFragment extends BaseFragment<SearchResultPresenter>
             return;
         }
 
+        if (mNovelSourceAdapter != null) {
+            mNovelSourceAdapter.replaceData(mNovelSourceDataList);
+            return;
+        }
+
         mNovelSourceAdapter = new NovelSourceAdapter(getActivity(), mNovelSourceDataList);
         mNovelSourceAdapter.setOnNovelSourceListener(new NovelSourceAdapter.NovelSourceListener() {
             @Override

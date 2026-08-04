@@ -18,10 +18,6 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author Feng Zhaohao
- * Created on 2019/11/9
- */
 public class SearchResultModel implements ISearchResultContract.Model {
 
     private final ISearchResultContract.Presenter mPresenter;
@@ -37,10 +33,23 @@ public class SearchResultModel implements ISearchResultContract.Model {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                final int[] lastProgressCount = new int[]{0};
                 List<NovelSourceData> aggregatedResults =
-                        new AggregatedSearchEngine().search(novelName);
+                        new AggregatedSearchEngine().search(novelName, Integer.MAX_VALUE, 10,
+                                new AggregatedSearchEngine.ProgressListener() {
+                                    @Override
+                                    public void onProgress(List<NovelSourceData> results) {
+                                        if (results.size() <= lastProgressCount[0]) {
+                                            return;
+                                        }
+                                        lastProgressCount[0] = results.size();
+                                        postSuccess(results);
+                                    }
+                                });
                 if (!aggregatedResults.isEmpty()) {
-                    postSuccess(aggregatedResults);
+                    if (aggregatedResults.size() > lastProgressCount[0]) {
+                        postSuccess(aggregatedResults);
+                    }
                     return;
                 }
                 searchLegacy(novelName);
@@ -81,7 +90,8 @@ public class SearchResultModel implements ISearchResultContract.Model {
                             for (int i = 0; i < list.size(); i++) {
                                 NovelsSourceBean.ListBean curr = list.get(i);
                                 NovelSourceData data = new NovelSourceData(curr.getName(),
-                                        curr.getAuthor(), curr.getIntroduce(), curr.getUrl(), curr.getCover());
+                                        curr.getAuthor(), curr.getIntroduce(),
+                                        curr.getUrl(), curr.getCover());
                                 data.setSourceName("默认源");
                                 novelSourceDataList.add(data);
                             }

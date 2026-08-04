@@ -45,6 +45,11 @@ public class NovelSourceAdapter extends
         this.mNovelSourceDataList = mNovelSourceDataList;
     }
 
+    public void replaceData(List<NovelSourceData> dataList) {
+        mNovelSourceDataList = dataList;
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public NovelSourceViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {

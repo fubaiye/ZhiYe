@@ -23,6 +23,7 @@ import com.feng.freader.entity.eventbus.Event;
 import com.feng.freader.entity.eventbus.HoldReadActivityEvent;
 import com.feng.freader.http.UrlObtainer;
 import com.feng.freader.presenter.CatalogPresenter;
+import com.feng.freader.source.SourceBookLink;
 import com.feng.freader.util.NetUtil;
 import com.feng.freader.util.StatusBarUtil;
 
@@ -116,7 +117,7 @@ public class CatalogActivity extends BaseActivity<CatalogPresenter>
         getWindow().setStatusBarColor(getResources().getColor(R.color.catalog_bg));
 
         if (mUrl != null) {
-            mPresenter.getCatalogData(UrlObtainer.getCatalogInfo(mUrl));
+            mPresenter.getCatalogData(catalogRequestUrl(mUrl));
         }
     }
 
@@ -263,8 +264,12 @@ public class CatalogActivity extends BaseActivity<CatalogPresenter>
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                mPresenter.getCatalogData(UrlObtainer.getCatalogInfo(mUrl));
+                mPresenter.getCatalogData(catalogRequestUrl(mUrl));
             }
         }, 300);
+    }
+
+    private String catalogRequestUrl(String url) {
+        return SourceBookLink.isSourceLink(url) ? url : UrlObtainer.getCatalogInfo(url);
     }
 }

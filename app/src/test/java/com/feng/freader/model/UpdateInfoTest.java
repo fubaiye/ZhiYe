@@ -48,4 +48,17 @@ public class UpdateInfoTest {
         assertEquals(8, info.getVersionCode());
         assertEquals("1.7", info.getVersionName());
     }
+
+    @Test
+    public void parsesAnyGitHubRepositoryAndPlainSemanticVersion() {
+        String html = "<html><a href=\"/myname/my-reader/releases/download/v1.19/ZhiYe-v1.19.apk\">APK</a></html>";
+
+        UpdateInfo info = UpdateInfo.fromGitHubReleasePage(html);
+
+        assertTrue(info.isValid());
+        assertEquals(19, info.getVersionCode());
+        assertEquals("1.19", info.getVersionName());
+        assertEquals("https://github.com/myname/my-reader/releases/download/v1.19/ZhiYe-v1.19.apk",
+                info.getApkUrl());
+    }
 }

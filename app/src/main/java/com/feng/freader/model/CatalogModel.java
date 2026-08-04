@@ -1,6 +1,8 @@
 package com.feng.freader.model;
 
 import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.feng.freader.constant.Constant;
 import com.feng.freader.constract.ICatalogContract;
@@ -12,6 +14,10 @@ import com.feng.freader.http.WikisourceApi;
 import com.feng.freader.http.OkhttpBuilder;
 import com.feng.freader.http.OkhttpCall;
 import com.feng.freader.http.OkhttpUtil;
+import com.feng.freader.source.BookSource;
+import com.feng.freader.source.BookSourceExecutor;
+import com.feng.freader.source.SourceBookLink;
+import com.feng.freader.source.SourceRepository;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
@@ -34,6 +40,10 @@ public class CatalogModel implements ICatalogContract.Model {
     @Override
     public void getCatalogData(String url) {
         Log.d("fzh", "getCatalogData: url = " + url);
+        if (SourceBookLink.isSourceLink(url)) {
+            getSourceCatalogData(url);
+            return;
+        }
         if (WikisourceApi.isWikisourceUrl(url)) {
             List<String> chapterNameList = new ArrayList<>();
             List<String> chapterUrlList = new ArrayList<>();
@@ -73,5 +83,47 @@ public class CatalogModel implements ICatalogContract.Model {
                 })
                 .build();
         OkhttpUtil.getRequest(builder);
+    }
+
+    private void getSourceCatalogData(final String url) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    BookSource source = SourceRepository.getInstance()
+                            .findById(SourceBookLink.sourceId(url));
+                    if (source == null) {
+                        postSourceCatalogError(Constant.NOT_FOUND_CATALOG_INFO);
+                        return;
+                    }
+                    CatalogData data = new BookSourceExecutor().catalog(source, url);
+                    if (data == null || data.getChapterUrlList().isEmpty()) {
+                        postSourceCatalogError(Constant.NOT_FOUND_CATALOG_INFO);
+                        return;
+                    }
+                    postSourceCatalogSuccess(data);
+                } catch (Throwable t) {
+                    postSourceCatalogError(t.getMessage());
+                }
+            }
+        }).start();
+    }
+
+    private void postSourceCatalogSuccess(final CatalogData data) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                mPresenter.getCatalogDataSuccess(data);
+            }
+        });
+    }
+
+    private void postSourceCatalogError(final String error) {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                mPresenter.getCatalogDataError(error == null ? "" : error);
+            }
+        });
     }
 }

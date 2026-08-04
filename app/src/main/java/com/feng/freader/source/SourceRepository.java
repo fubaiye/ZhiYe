@@ -63,6 +63,18 @@ public class SourceRepository {
         return enabled;
     }
 
+    public BookSource findById(String id) {
+        if (id == null || id.length() == 0) {
+            return null;
+        }
+        for (BookSource source : getAll()) {
+            if (id.equals(source.getId())) {
+                return source;
+            }
+        }
+        return null;
+    }
+
     public void save(List<BookSource> sources) {
         preferences.edit().putString(KEY_JSON, BookSourceParser.toJson(sources)).apply();
     }

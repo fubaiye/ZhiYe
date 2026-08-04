@@ -13,10 +13,18 @@ import okhttp3.Response;
 public class SourceHttpClient {
     private static final MediaType FORM_TYPE =
             MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");
-    private final OkHttpClient client = NetworkClientFactory.shared();
+    private OkHttpClient client;
 
     public String execute(BookSource source, String keyword, int page) throws IOException {
         String url = SourceTemplate.render(source.getSearchUrl(), source, keyword, page);
+        return execute(source, url, keyword, page);
+    }
+
+    public String executeUrl(BookSource source, String url) throws IOException {
+        return execute(source, url, "", 1);
+    }
+
+    private String execute(BookSource source, String url, String keyword, int page) throws IOException {
         Request.Builder builder = new Request.Builder().url(url);
         for (Map.Entry<String, String> entry : source.getHeaders().entrySet()) {
             builder.header(entry.getKey(), SourceTemplate.render(entry.getValue(), source, keyword, page));
@@ -30,7 +38,7 @@ public class SourceHttpClient {
         } else {
             builder.get();
         }
-        Response response = client.newCall(builder.build()).execute();
+        Response response = client().newCall(builder.build()).execute();
         try {
             if (!response.isSuccessful()) {
                 throw new IOException("HTTP " + response.code());
@@ -39,6 +47,13 @@ public class SourceHttpClient {
         } finally {
             response.close();
         }
+    }
+
+    private OkHttpClient client() {
+        if (client == null) {
+            client = NetworkClientFactory.shared();
+        }
+        return client;
     }
 
     private String cookieHeader(BookSource source, String keyword, int page) {

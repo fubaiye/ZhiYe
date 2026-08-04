@@ -40,9 +40,11 @@ import com.feng.freader.entity.eventbus.HoldReadActivityEvent;
 import com.feng.freader.http.UrlObtainer;
 import com.feng.freader.presenter.ReadPresenter;
 import com.feng.freader.reader.EpubChapterFallbackPolicy;
+import com.feng.freader.reader.ReaderChapterTitleFormatter;
 import com.feng.freader.reader.ReaderDisplayPolicy;
 import com.feng.freader.reader.ReaderProfileManager;
 import com.feng.freader.reader.ReaderRecord;
+import com.feng.freader.source.SourceBookLink;
 import com.feng.freader.util.EpubUtils;
 import com.feng.freader.util.ScreenUtil;
 import com.feng.freader.util.EventBusUtil;
@@ -82,6 +84,7 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
 
     private RealPageView mPageView;
     private TextView mNovelTitleTv;
+    private TextView mBarChapterTitleTv;
     private TextView mNovelProgressTv;
     private TextView mStateTv;
 
@@ -308,6 +311,7 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         });
 
         mNovelTitleTv = findViewById(R.id.tv_read_novel_title);
+        mBarChapterTitleTv = findViewById(R.id.tv_read_bar_chapter_title);
         mNovelProgressTv = findViewById(R.id.tv_read_novel_progress);
         mStateTv = findViewById(R.id.tv_read_state);
 
@@ -462,7 +466,7 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
     protected void doAfterInit() {
         if (mType == 0) {
             // 先通过小说 url 获取所有章节 url 信息
-            mPresenter.getChapterList(UrlObtainer.getCatalogInfo(mNovelUrl));
+            mPresenter.getChapterList(catalogRequestUrl(mNovelUrl));
         } else if (mType == 1){
             // 通过 FilePath 读取本地小说
             mPresenter.loadTxt(mNovelUrl);
@@ -552,11 +556,12 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
             Collections.reverse(mChapterUrlList);
             Collections.reverse(mNetCatalogList);
         }
+        mChapterIndex = Math.max(0, Math.min(mChapterIndex, mChapterUrlList.size() - 1));
+        updateDisplayedChapterTitle(ReaderChapterTitleFormatter.titleAt(mNetCatalogList, mChapterIndex, mName));
         // 获取具体章节信息
         if (mChapterUrlList.get(mChapterIndex) != null) {
             mIsLoadingChapter = true;
-            mPresenter.getDetailedChapterData(UrlObtainer
-                    .getDetailedChapter(mChapterUrlList.get(mChapterIndex)));
+            mPresenter.getDetailedChapterData(chapterRequestUrl(mChapterUrlList.get(mChapterIndex)));
         } else {
             mStateTv.setText("获取章节信息失败");
         }
@@ -587,7 +592,9 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
             mPosition = mPageView.getPosition();
             mJumpToChapterEnd = false;
         }
-        mNovelTitleTv.setText(data.getName());
+        updateDisplayedChapterTitle(ReaderChapterTitleFormatter.firstNonEmpty(
+                ReaderChapterTitleFormatter.titleAt(mNetCatalogList, mChapterIndex, ""),
+                data.getName(), mName));
         updateChapterProgress();
     }
 
@@ -610,7 +617,7 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         mNovelContent = text;
         mStateTv.setVisibility(View.GONE);
         mPageView.initDrawText(text, mPosition);
-        mNovelTitleTv.setText(mName);
+        updateDisplayedChapterTitle(mName);
         updateChapterProgress();
     }
 
@@ -702,7 +709,8 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         // 设置该节的名称
         String title = dataList.get(0).getType() == EpubData.TYPE.TITLE?
                 dataList.get(0).getData() : "";
-        mNovelTitleTv.setText(title);
+        updateDisplayedChapterTitle(ReaderChapterTitleFormatter.firstNonEmpty(
+                title, epubTocTitle(mChapterIndex), mName));
         updateChapterProgress();
     }
 
@@ -734,7 +742,9 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
                 new Handler().post(new Runnable() {
                     @Override
                     public void run() {
-                        mPresenter.getDetailedChapterData(UrlObtainer.getDetailedChapter(
+                        updateDisplayedChapterTitle(ReaderChapterTitleFormatter.titleAt(
+                                mNetCatalogList, mChapterIndex, mName));
+                        mPresenter.getDetailedChapterData(chapterRequestUrl(
                                 mChapterUrlList.get(mChapterIndex)));
                     }
                 });
@@ -769,6 +779,32 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
     /**
      * 显示上下栏
      */
+    private String catalogRequestUrl(String url) {
+        return SourceBookLink.isSourceLink(url) ? url : UrlObtainer.getCatalogInfo(url);
+    }
+
+    private String chapterRequestUrl(String url) {
+        return SourceBookLink.isSourceLink(url) ? url : UrlObtainer.getDetailedChapter(url);
+    }
+
+    private void updateDisplayedChapterTitle(String title) {
+        String display = ReaderChapterTitleFormatter.firstNonEmpty(title, "", mName);
+        if (mNovelTitleTv != null) {
+            mNovelTitleTv.setText(display);
+        }
+        if (mBarChapterTitleTv != null) {
+            mBarChapterTitleTv.setText(display);
+        }
+    }
+
+    private String epubTocTitle(int index) {
+        if (mEpubTocList != null && index >= 0 && index < mEpubTocList.size()
+                && mEpubTocList.get(index) != null) {
+            return mEpubTocList.get(index).getTitle();
+        }
+        return "";
+    }
+
     private void showBar() {
         Animation topAnim = AnimationUtils.loadAnimation(
                 this, R.anim.read_setting_top_enter);

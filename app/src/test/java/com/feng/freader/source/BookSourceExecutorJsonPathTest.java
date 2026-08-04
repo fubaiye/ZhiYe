@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class BookSourceExecutorJsonPathTest {
 
@@ -40,8 +41,10 @@ public class BookSourceExecutorJsonPathTest {
 
         assertEquals(2, results.size());
         assertEquals("第一本", results.get(0).getName());
-        assertEquals("https://example.com/book/1", results.get(0).getUrl());
+        assertTrue(SourceBookLink.isSourceLink(results.get(0).getUrl()));
+        assertEquals("https://example.com/book/1", SourceBookLink.originalUrl(results.get(0).getUrl()));
         assertEquals("第二本", results.get(1).getName());
-        assertEquals("https://cdn.example.com/book/2", results.get(1).getUrl());
+        assertTrue(SourceBookLink.isSourceLink(results.get(1).getUrl()));
+        assertEquals("https://cdn.example.com/book/2", SourceBookLink.originalUrl(results.get(1).getUrl()));
     }
 }

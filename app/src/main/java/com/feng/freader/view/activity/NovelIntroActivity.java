@@ -25,6 +25,7 @@ import com.feng.freader.entity.data.NovelSourceData;
 import com.feng.freader.entity.eventbus.Event;
 import com.feng.freader.entity.eventbus.NovelIntroInitEvent;
 import com.feng.freader.http.WikisourceApi;
+import com.feng.freader.source.SourceBookLink;
 import com.feng.freader.test.TestActivity;
 import com.feng.freader.util.BlurUtil;
 
@@ -233,7 +234,7 @@ public class NovelIntroActivity extends BaseActivity implements View.OnClickList
     }
 
     private String getDisplayUrl() {
-        String url = mNovelSourceData.getUrl();
+        String url = SourceBookLink.originalUrl(mNovelSourceData.getUrl());
         if (WikisourceApi.isWikisourceUrl(url)) {
             return WikisourceApi.toBrowserUrl(url);
         }

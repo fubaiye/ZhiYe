@@ -9,14 +9,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class AggregatedSearchEngine {
-    private static final int MAX_WORKERS = 48;
+    private static final int MAX_WORKERS = 12;
     private static final long CACHE_TTL_MS = 10 * 60 * 1000L;
     private static final int CACHE_MAX = 40;
+    private static final long PROGRESS_INTERVAL_MS = 450L;
     private static final Map<String, CachedResults> CACHE = new LinkedHashMap<String, CachedResults>(16, 0.75f, true) {
         @Override
         protected boolean removeEldestEntry(Map.Entry<String, CachedResults> eldest) {
@@ -26,37 +31,76 @@ public class AggregatedSearchEngine {
 
     private final BookSourceExecutor executor = new BookSourceExecutor();
 
+    public interface ProgressListener {
+        void onProgress(List<NovelSourceData> results);
+    }
+
     public List<NovelSourceData> search(String keyword) {
-        return search(keyword, Integer.MAX_VALUE, 8);
+        return search(keyword, Integer.MAX_VALUE, 10);
     }
 
     public List<NovelSourceData> search(String keyword, int maxSources, int timeoutSeconds) {
+        return search(keyword, maxSources, timeoutSeconds, null);
+    }
+
+    public List<NovelSourceData> search(String keyword, int maxSources, int timeoutSeconds,
+                                        ProgressListener listener) {
         final String query = keyword;
         List<NovelSourceData> cached = getCached(query, maxSources);
         if (!cached.isEmpty()) {
+            notifyProgress(listener, cached);
             return cached;
         }
         List<BookSource> sources = limitSources(SourceRepository.getInstance().getEnabled(), maxSources);
         final List<NovelSourceData> rawResults = Collections.synchronizedList(new ArrayList<NovelSourceData>());
         ExecutorService pool = Executors.newFixedThreadPool(workerCount(sources.size()));
-        final CountDownLatch latch = new CountDownLatch(sources.size());
+        CompletionService<List<NovelSourceData>> completionService =
+                new ExecutorCompletionService<>(pool);
         for (final BookSource source : sources) {
-            pool.execute(new Runnable() {
+            completionService.submit(new Callable<List<NovelSourceData>>() {
                 @Override
-                public void run() {
+                public List<NovelSourceData> call() {
                     try {
-                        rawResults.addAll(executor.search(source, query));
+                        return executor.search(source, query);
                     } catch (Throwable ignored) {
-                    } finally {
-                        latch.countDown();
                     }
+                    return new ArrayList<>();
                 }
             });
         }
+        int completed = 0;
+        int lastProgressSize = 0;
+        long lastProgressAt = 0L;
+        long deadlineAt = System.currentTimeMillis() + Math.max(1, timeoutSeconds) * 1000L;
         try {
-            latch.await(Math.max(1, timeoutSeconds), TimeUnit.SECONDS);
+            while (completed < sources.size()) {
+                long remainMs = deadlineAt - System.currentTimeMillis();
+                if (remainMs <= 0) {
+                    break;
+                }
+                Future<List<NovelSourceData>> future =
+                        completionService.poll(Math.min(PROGRESS_INTERVAL_MS, remainMs),
+                                TimeUnit.MILLISECONDS);
+                if (future == null) {
+                    continue;
+                }
+                completed++;
+                List<NovelSourceData> sourceResults = future.get();
+                if (sourceResults != null && !sourceResults.isEmpty()) {
+                    rawResults.addAll(sourceResults);
+                    List<NovelSourceData> progress = sortAndDedupe(rawResults, query);
+                    long now = System.currentTimeMillis();
+                    if (progress.size() > lastProgressSize
+                            || now - lastProgressAt >= PROGRESS_INTERVAL_MS) {
+                        lastProgressSize = progress.size();
+                        lastProgressAt = now;
+                        notifyProgress(listener, progress);
+                    }
+                }
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        } catch (Throwable ignored) {
         } finally {
             pool.shutdownNow();
         }
@@ -80,7 +124,14 @@ public class AggregatedSearchEngine {
         if (sourceCount <= 6) {
             return sourceCount;
         }
-        return Math.min(MAX_WORKERS, Math.max(8, sourceCount / 20));
+        return Math.min(MAX_WORKERS, Math.max(6, sourceCount / 30));
+    }
+
+    private static void notifyProgress(ProgressListener listener, List<NovelSourceData> results) {
+        if (listener == null || results == null || results.isEmpty()) {
+            return;
+        }
+        listener.onProgress(new ArrayList<>(results));
     }
 
     private static List<NovelSourceData> getCached(String keyword, int maxSources) {
