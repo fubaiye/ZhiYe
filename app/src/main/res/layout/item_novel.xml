@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="150dp"
-    android:maxHeight="150dp"
-    android:minHeight="150dp"
-    android:padding="10dp">
+    android:layout_height="172dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/zy_card"
+    android:elevation="@dimen/zy_elevation_card"
+    android:padding="14dp">
 
     <!-- cover -->
     <ImageView
         android:id="@+id/iv_item_novel_cover"
-        android:layout_width="110dp"
-        android:layout_height="150dp"
+        android:layout_width="96dp"
+        android:layout_height="144dp"
+        android:background="@drawable/zy_cover_bg"
         android:scaleType="fitXY"
         android:src="@drawable/default_cover"
         android:layout_alignParentStart="true" />
@@ -23,8 +28,9 @@
         android:layout_marginStart="@dimen/item_novel_source_text_margin_start"
         android:layout_marginEnd="@dimen/item_novel_source_text_margin_end"
         android:text="@string/item_novel_source_name"
-        android:textColor="@color/item_novel_source_name"
+        android:textColor="@color/zy_text_primary"
         android:textSize="18sp"
+        android:textStyle="bold"
         android:layout_alignParentTop="true"
         android:layout_toEndOf="@id/iv_item_novel_cover"
         android:singleLine="true"
@@ -39,7 +45,7 @@
         android:layout_marginTop="5dp"
         android:layout_marginEnd="@dimen/item_novel_source_text_margin_end"
         android:text="@string/item_novel_source_author"
-        android:textColor="@color/item_novel_source_author"
+        android:textColor="@color/zy_text_secondary"
         android:textSize="14sp"
         android:layout_below="@id/tv_item_novel_title"
         android:layout_toEndOf="@id/iv_item_novel_cover"
@@ -55,7 +61,7 @@
         android:layout_marginTop="5dp"
         android:layout_marginEnd="@dimen/item_novel_source_text_margin_end"
         android:text="@string/item_novel_source_introduce"
-        android:textColor="@color/item_novel_source_introduce"
+        android:textColor="@color/zy_text_secondary"
         android:textSize="14sp"
         android:layout_below="@id/tv_item_novel_author"
         android:layout_toEndOf="@id/iv_item_novel_cover"

@@ -2,6 +2,7 @@ package com.feng.freader.view.fragment.main;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,6 +21,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.feng.freader.R;
 import com.feng.freader.adapter.BookshelfNovelsAdapter;
 import com.feng.freader.base.BaseFragment;
@@ -72,6 +75,10 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
     private TextView mSelectAllTv;
     private TextView mCancelTv;
     private TextView mDeleteTv;
+    private View mContinueCard;
+    private ImageView mContinueCoverIv;
+    private TextView mContinueNameTv;
+    private TextView mContinueProgressTv;
 
     private List<BookshelfNovelDbData> mDataList = new ArrayList<>();
     private List<Boolean> mCheckedList = new ArrayList<>();
@@ -125,6 +132,11 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
         mCancelTv.setOnClickListener(this);
         mDeleteTv = getActivity().findViewById(R.id.tv_bookshelf_multi_delete_delete);
         mDeleteTv.setOnClickListener(this);
+        mContinueCard = getActivity().findViewById(R.id.cl_bookshelf_continue);
+        mContinueCard.setOnClickListener(this);
+        mContinueCoverIv = getActivity().findViewById(R.id.iv_bookshelf_continue_cover);
+        mContinueNameTv = getActivity().findViewById(R.id.tv_bookshelf_continue_name);
+        mContinueProgressTv = getActivity().findViewById(R.id.tv_bookshelf_continue_progress);
     }
 
     @Override
@@ -157,6 +169,11 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
                         | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 startActivityForResult(intent, REQUEST_IMPORT_BOOK);
+                break;
+            case R.id.cl_bookshelf_continue:
+                if (!mDataList.isEmpty()) {
+                    openBook(0);
+                }
                 break;
             case R.id.tv_bookshelf_multi_delete_select_all:
                 // 全选
@@ -358,6 +375,7 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
             mBookshelfNovelsAdapter.notifyDataSetChanged();
         }
         enrichLocalBooks(dataList);
+        updateContinueReadingCard();
     }
 
     private void enrichLocalBooks(List<BookshelfNovelDbData> dataList) {
@@ -406,6 +424,68 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
                 mEnrichingLocalBooks.remove(data.getNovelUrl());
             }
         });
+    }
+
+    private void updateContinueReadingCard() {
+        if (mContinueNameTv == null || mContinueProgressTv == null || mContinueCoverIv == null) {
+            return;
+        }
+        if (mDataList == null || mDataList.isEmpty()) {
+            mContinueNameTv.setText("还没有正在阅读的书");
+            mContinueProgressTv.setText("导入一本书后会显示阅读进度");
+            mContinueCoverIv.setImageResource(R.drawable.default_cover);
+            return;
+        }
+        BookshelfNovelDbData book = mDataList.get(0);
+        mContinueNameTv.setText(book.getName());
+        int chapter = Math.max(0, book.getChapterIndex()) + 1;
+        mContinueProgressTv.setText("阅读到：第 " + chapter + " 章");
+        String cover = book.getCover() == null ? "" : book.getCover();
+        if (book.getType() == 1) {
+            mContinueCoverIv.setImageResource(R.drawable.local_txt);
+        } else if (book.getType() == 2 && cover.length() == 0) {
+            mContinueCoverIv.setImageResource(R.drawable.local_epub);
+        } else if (cover.startsWith("http") || cover.startsWith("content:") || cover.startsWith("file:")) {
+            Glide.with(getActivity())
+                    .load(cover)
+                    .apply(new RequestOptions()
+                            .placeholder(R.drawable.default_cover)
+                            .error(R.drawable.default_cover))
+                    .into(mContinueCoverIv);
+        } else if (cover.length() > 0) {
+            Bitmap bitmap = FileUtil.loadLocalPicture(cover);
+            if (bitmap != null) {
+                mContinueCoverIv.setImageBitmap(bitmap);
+            } else {
+                mContinueCoverIv.setImageResource(R.drawable.default_cover);
+            }
+        } else {
+            mContinueCoverIv.setImageResource(R.drawable.default_cover);
+        }
+    }
+
+    private void openBook(int position) {
+        if (position < 0 || position >= mDataList.size()) {
+            return;
+        }
+        if (!NetUtil.hasInternet(getActivity())) {
+            showShortToast("当前无网络，请检查网络后重试");
+            return;
+        }
+        if (mIsDeleting) {
+            return;
+        }
+        BookshelfNovelDbData book = mDataList.get(position);
+        mBookshelfMetaManager.markRecent(book.getNovelUrl());
+        Intent intent = new Intent(getActivity(), ReadActivity.class);
+        intent.putExtra(ReadActivity.KEY_NOVEL_URL, book.getNovelUrl());
+        intent.putExtra(ReadActivity.KEY_NAME, book.getName());
+        intent.putExtra(ReadActivity.KEY_COVER, book.getCover());
+        intent.putExtra(ReadActivity.KEY_TYPE, book.getType());
+        intent.putExtra(ReadActivity.KEY_CHAPTER_INDEX, book.getChapterIndex());
+        intent.putExtra(ReadActivity.KEY_POSITION, book.getPosition());
+        intent.putExtra(ReadActivity.KEY_SECOND_POSITION, book.getSecondPosition());
+        startActivity(intent);
     }
 
     private void initAdapter() {

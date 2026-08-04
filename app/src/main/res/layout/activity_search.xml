@@ -15,10 +15,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginStart="10dp"
-        android:layout_marginTop="@dimen/search_back_and_search_text_margin_top"
+        android:layout_marginTop="38dp"
         android:padding="12dp"
         android:src="@drawable/search_back"
-        android:background="@drawable/shape_search_back_bg"/>
+        android:background="@drawable/zy_card"
+        android:elevation="@dimen/zy_elevation_card"/>
 
     <TextView
         android:id="@+id/tv_search_search_text"
@@ -27,12 +28,13 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginEnd="10dp"
-        android:layout_marginTop="@dimen/search_back_and_search_text_margin_top"
+        android:layout_marginTop="38dp"
         android:text="@string/search_search_text"
         android:textColor="@color/search_search_text"
         android:textSize="16sp"
         android:gravity="center"
-        android:background="@drawable/shape_search_back_bg"
+        android:background="@drawable/zy_card"
+        android:elevation="@dimen/zy_elevation_card"
         android:clickable="true"
         android:focusable="true"/>
 
@@ -43,11 +45,12 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toEndOf="@id/iv_search_back"
         app:layout_constraintEnd_toStartOf="@id/tv_search_search_text"
-        android:layout_marginTop="@dimen/search_search_bar_margin_top"
+        android:layout_marginTop="33dp"
         android:layout_marginStart="5dp"
         android:layout_marginEnd="5dp"
-        android:background="@drawable/shape_search_search_bar_bg"
-        android:paddingStart="20dp"
+        android:background="@drawable/zy_search_bar"
+        android:elevation="@dimen/zy_elevation_card"
+        android:paddingStart="22dp"
         android:paddingEnd="10dp"
         android:hint="@string/search_edit_text_hint"
         android:imeOptions="actionSearch|flagNoExtractUi"
@@ -60,7 +63,7 @@
         android:id="@+id/iv_search_delete_search_text"
         android:layout_width="@dimen/search_search_bar_height"
         android:layout_height="@dimen/search_search_bar_height"
-        android:layout_marginTop="@dimen/search_search_bar_margin_top"
+        android:layout_marginTop="33dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toStartOf="@id/tv_search_search_text"
         android:layout_marginEnd="15dp"
@@ -75,7 +78,8 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/iv_search_back"
+        app:layout_constraintTop_toBottomOf="@id/et_search_search_bar"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
 

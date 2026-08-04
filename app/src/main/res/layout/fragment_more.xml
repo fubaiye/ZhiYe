@@ -1,384 +1,228 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/more_bg">
+    android:background="@color/more_bg"
+    android:fillViewport="true"
+    android:overScrollMode="never">
 
-    <!-- top -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="42dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="28dp">
 
-    <TextView
-        android:id="@+id/tv_more_top"
-        android:layout_width="0dp"
-        android:layout_height="50dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:text="@string/more_top_text"
-        android:textColor="@color/more_text"
-        android:textSize="16sp"
-        android:gravity="center"
-        android:layout_marginTop="30dp"/>
+        <TextView
+            android:id="@+id/tv_more_top"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/more_top_text"
+            android:textColor="@color/zy_text_primary"
+            android:textSize="30sp"
+            android:textStyle="bold" />
 
-    <View
-        android:id="@+id/v_more_top_separator"
-        android:layout_width="0dp"
-        android:layout_height="5dp"
-        android:background="@drawable/shape_catalog_separator"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_more_top"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="108dp"
+            android:layout_marginTop="18dp"
+            android:background="@drawable/zy_card"
+            android:elevation="@dimen/zy_elevation_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="18dp">
 
-    <!-- function -->
+            <TextView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="@drawable/zy_primary_pill"
+                android:gravity="center"
+                android:text="知"
+                android:textColor="@android:color/white"
+                android:textSize="26sp"
+                android:textStyle="bold" />
 
-    <!-- check_update -->
-    
-    <View
-        android:id="@+id/v_more_check_update"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/v_more_top_separator"
-        android:background="@drawable/selector_more_function_bg"
-        android:clickable="true"
-        android:focusable="true"/>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/iv_more_check_update"
-        android:layout_width="@dimen/more_function_height"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="@id/v_more_check_update"
-        app:layout_constraintTop_toTopOf="@id/v_more_check_update"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_check_update"
-        android:padding="@dimen/more_image_padding"
-        android:src="@drawable/more_check_update"
-        android:scaleType="fitXY"
-        android:layout_marginStart="10dp"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="知页阅读"
+                    android:textColor="@color/zy_text_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toEndOf="@id/iv_more_check_update"
-        app:layout_constraintTop_toTopOf="@id/v_more_check_update"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_check_update"
-        android:text="@string/more_check_update"
-        android:textSize="@dimen/more_text_size"
-        android:textColor="@color/more_text"
-        android:gravity="center"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="本地书架、在线书库与自托管更新"
+                    android:textColor="@color/zy_text_secondary"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </LinearLayout>
 
-    <ImageView
-        android:id="@+id/iv_more_check_update_next"
-        android:layout_width="25dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintEnd_toEndOf="@id/v_more_check_update"
-        app:layout_constraintTop_toTopOf="@id/v_more_check_update"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_check_update"
-        android:paddingTop="@dimen/more_image_small_padding"
-        android:paddingBottom="@dimen/more_image_small_padding"
-        android:src="@drawable/more_next"
-        android:scaleType="fitCenter"
-        android:layout_marginEnd="20dp"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:text="阅读与书库"
+            android:textColor="@color/zy_text_secondary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/tv_more_version"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintEnd_toStartOf="@id/iv_more_check_update_next"
-        app:layout_constraintTop_toTopOf="@id/v_more_check_update"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_check_update"
-        android:text="@string/more_version"
-        android:textSize="@dimen/more_text_small_size"
-        android:textColor="@color/more_text_light"
-        android:gravity="center"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/zy_card"
+            android:elevation="@dimen/zy_elevation_card"
+            android:orientation="vertical">
 
-    <!-- clear -->
+            <LinearLayout
+                android:id="@+id/v_more_online_library"
+                style="@style/ZySettingsRow"
+                android:clickable="true"
+                android:focusable="true">
 
-    <View
-        android:id="@+id/v_more_clear"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/v_more_check_update"
-        android:background="@drawable/selector_more_function_bg"
-        android:clickable="true"
-        android:focusable="true"/>
+                <ImageView style="@style/ZySettingsIcon" android:src="@drawable/zy_ic_discover_filled" />
+                <TextView style="@style/ZySettingsTitle" android:text="在线书库" />
+                <TextView style="@style/ZySettingsChevron" android:text="›" />
+            </LinearLayout>
 
-    <ImageView
-        android:id="@+id/iv_more_clear"
-        android:layout_width="@dimen/more_function_height"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="@id/v_more_clear"
-        app:layout_constraintTop_toTopOf="@id/v_more_clear"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_clear"
-        android:padding="@dimen/more_image_padding"
-        android:src="@drawable/more_clear"
-        android:scaleType="fitXY"
-        android:layout_marginStart="10dp"/>
+            <LinearLayout
+                android:id="@+id/v_more_source_manager"
+                style="@style/ZySettingsRow"
+                android:clickable="true"
+                android:focusable="true">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toEndOf="@id/iv_more_clear"
-        app:layout_constraintTop_toTopOf="@id/v_more_clear"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_clear"
-        android:text="@string/more_clear"
-        android:textSize="@dimen/more_text_size"
-        android:textColor="@color/more_text"
-        android:gravity="center"/>
+                <ImageView style="@style/ZySettingsIcon" android:src="@drawable/more_about" />
+                <TextView style="@style/ZySettingsTitle" android:text="书源管理" />
+                <TextView style="@style/ZySettingsChevron" android:text="›" />
+            </LinearLayout>
+        </LinearLayout>
 
-    <ImageView
-        android:id="@+id/iv_more_clear_next"
-        android:layout_width="25dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintEnd_toEndOf="@id/v_more_clear"
-        app:layout_constraintTop_toTopOf="@id/v_more_clear"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_clear"
-        android:paddingTop="@dimen/more_image_small_padding"
-        android:paddingBottom="@dimen/more_image_small_padding"
-        android:src="@drawable/more_next"
-        android:scaleType="fitCenter"
-        android:layout_marginEnd="20dp"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:text="数据"
+            android:textColor="@color/zy_text_secondary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/tv_more_cache_size"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintEnd_toStartOf="@id/iv_more_clear_next"
-        app:layout_constraintTop_toTopOf="@id/v_more_clear"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_clear"
-        android:text="@string/more_cache_size"
-        android:textSize="@dimen/more_text_small_size"
-        android:textColor="@color/more_text_light"
-        android:gravity="center"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/zy_card"
+            android:elevation="@dimen/zy_elevation_card"
+            android:orientation="vertical">
 
-    <View
-        android:id="@+id/v_more_online_library"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/v_more_clear"
-        android:background="@drawable/selector_more_function_bg"
-        android:clickable="true"
-        android:focusable="true"/>
+            <LinearLayout
+                android:id="@+id/v_more_clear"
+                style="@style/ZySettingsRow"
+                android:clickable="true"
+                android:focusable="true">
 
-    <ImageView
-        android:id="@+id/iv_more_online_library"
-        android:layout_width="@dimen/more_function_height"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="@id/v_more_online_library"
-        app:layout_constraintTop_toTopOf="@id/v_more_online_library"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_online_library"
-        android:padding="@dimen/more_image_padding"
-        android:src="@drawable/discovery_after"
-        android:scaleType="fitCenter"
-        android:layout_marginStart="10dp"/>
+                <ImageView
+                    android:id="@+id/iv_more_clear"
+                    style="@style/ZySettingsIcon"
+                    android:src="@drawable/more_clear" />
+                <TextView style="@style/ZySettingsTitle" android:text="@string/more_clear" />
+                <TextView
+                    android:id="@+id/tv_more_cache_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="@string/more_cache_size"
+                    android:textColor="@color/more_text_light"
+                    android:textSize="14sp" />
+                <TextView style="@style/ZySettingsChevron" android:text="›" />
+            </LinearLayout>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toEndOf="@id/iv_more_online_library"
-        app:layout_constraintTop_toTopOf="@id/v_more_online_library"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_online_library"
-        android:text="在线书库"
-        android:textSize="@dimen/more_text_size"
-        android:textColor="@color/more_text"
-        android:gravity="center"/>
+            <LinearLayout
+                android:id="@+id/v_more_backup"
+                style="@style/ZySettingsRow"
+                android:clickable="true"
+                android:focusable="true">
 
-    <ImageView
-        android:layout_width="25dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintEnd_toEndOf="@id/v_more_online_library"
-        app:layout_constraintTop_toTopOf="@id/v_more_online_library"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_online_library"
-        android:paddingTop="@dimen/more_image_small_padding"
-        android:paddingBottom="@dimen/more_image_small_padding"
-        android:src="@drawable/more_next"
-        android:scaleType="fitCenter"
-        android:layout_marginEnd="20dp"/>
+                <ImageView style="@style/ZySettingsIcon" android:src="@drawable/more_after" />
+                <TextView style="@style/ZySettingsTitle" android:text="备份数据" />
+                <TextView style="@style/ZySettingsChevron" android:text="›" />
+            </LinearLayout>
 
-    <View
-        android:id="@+id/v_more_source_manager"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/v_more_online_library"
-        android:background="@drawable/selector_more_function_bg"
-        android:clickable="true"
-        android:focusable="true"/>
+            <LinearLayout
+                android:id="@+id/v_more_restore"
+                style="@style/ZySettingsRow"
+                android:clickable="true"
+                android:focusable="true">
 
-    <ImageView
-        android:id="@+id/iv_more_source_manager"
-        android:layout_width="@dimen/more_function_height"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="@id/v_more_source_manager"
-        app:layout_constraintTop_toTopOf="@id/v_more_source_manager"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_source_manager"
-        android:padding="@dimen/more_image_padding"
-        android:src="@drawable/more_about"
-        android:scaleType="fitXY"
-        android:layout_marginStart="10dp"/>
+                <ImageView style="@style/ZySettingsIcon" android:src="@drawable/more_before" />
+                <TextView style="@style/ZySettingsTitle" android:text="恢复备份" />
+                <TextView style="@style/ZySettingsChevron" android:text="›" />
+            </LinearLayout>
+        </LinearLayout>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toEndOf="@id/iv_more_source_manager"
-        app:layout_constraintTop_toTopOf="@id/v_more_source_manager"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_source_manager"
-        android:text="书源管理"
-        android:textSize="@dimen/more_text_size"
-        android:textColor="@color/more_text"
-        android:gravity="center"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="26dp"
+            android:text="关于"
+            android:textColor="@color/zy_text_secondary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
 
-    <ImageView
-        android:id="@+id/iv_more_source_manager_next"
-        android:layout_width="25dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintEnd_toEndOf="@id/v_more_source_manager"
-        app:layout_constraintTop_toTopOf="@id/v_more_source_manager"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_source_manager"
-        android:paddingTop="@dimen/more_image_small_padding"
-        android:paddingBottom="@dimen/more_image_small_padding"
-        android:src="@drawable/more_next"
-        android:scaleType="fitCenter"
-        android:layout_marginEnd="20dp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/zy_card"
+            android:elevation="@dimen/zy_elevation_card"
+            android:orientation="vertical">
 
-    <View
-        android:id="@+id/v_more_backup"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/v_more_source_manager"
-        android:background="@drawable/selector_more_function_bg"
-        android:clickable="true"
-        android:focusable="true"/>
+            <LinearLayout
+                android:id="@+id/v_more_check_update"
+                style="@style/ZySettingsRow"
+                android:clickable="true"
+                android:focusable="true">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="@id/v_more_backup"
-        app:layout_constraintTop_toTopOf="@id/v_more_backup"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_backup"
-        android:layout_marginStart="70dp"
-        android:text="备份数据"
-        android:textSize="@dimen/more_text_size"
-        android:textColor="@color/more_text"
-        android:gravity="center"/>
+                <ImageView
+                    android:id="@+id/iv_more_check_update"
+                    style="@style/ZySettingsIcon"
+                    android:src="@drawable/more_check_update" />
+                <TextView style="@style/ZySettingsTitle" android:text="@string/more_check_update" />
+                <TextView
+                    android:id="@+id/tv_more_version"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="@string/more_version"
+                    android:textColor="@color/more_text_light"
+                    android:textSize="14sp" />
+                <TextView style="@style/ZySettingsChevron" android:text="›" />
+            </LinearLayout>
 
-    <ImageView
-        android:layout_width="25dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintEnd_toEndOf="@id/v_more_backup"
-        app:layout_constraintTop_toTopOf="@id/v_more_backup"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_backup"
-        android:paddingTop="@dimen/more_image_small_padding"
-        android:paddingBottom="@dimen/more_image_small_padding"
-        android:src="@drawable/more_next"
-        android:scaleType="fitCenter"
-        android:layout_marginEnd="20dp"/>
+            <LinearLayout
+                android:id="@+id/v_more_about"
+                style="@style/ZySettingsRow"
+                android:clickable="true"
+                android:focusable="true">
 
-    <View
-        android:id="@+id/v_more_restore"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/v_more_backup"
-        android:background="@drawable/selector_more_function_bg"
-        android:clickable="true"
-        android:focusable="true"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="@id/v_more_restore"
-        app:layout_constraintTop_toTopOf="@id/v_more_restore"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_restore"
-        android:layout_marginStart="70dp"
-        android:text="恢复备份"
-        android:textSize="@dimen/more_text_size"
-        android:textColor="@color/more_text"
-        android:gravity="center"/>
-
-    <ImageView
-        android:layout_width="25dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintEnd_toEndOf="@id/v_more_restore"
-        app:layout_constraintTop_toTopOf="@id/v_more_restore"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_restore"
-        android:paddingTop="@dimen/more_image_small_padding"
-        android:paddingBottom="@dimen/more_image_small_padding"
-        android:src="@drawable/more_next"
-        android:scaleType="fitCenter"
-        android:layout_marginEnd="20dp"/>
-
-    <!-- more -->
-
-    <View
-        android:id="@+id/v_more_about"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/v_more_restore"
-        android:background="@drawable/selector_more_function_bg"
-        android:clickable="true"
-        android:focusable="true"
-        android:visibility="gone"/>
-
-    <ImageView
-        android:id="@+id/iv_more_about"
-        android:layout_width="@dimen/more_function_height"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toStartOf="@id/v_more_about"
-        app:layout_constraintTop_toTopOf="@id/v_more_about"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_about"
-        android:padding="@dimen/more_image_padding"
-        android:src="@drawable/more_about"
-        android:scaleType="fitXY"
-        android:layout_marginStart="10dp"
-        android:visibility="gone"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintStart_toEndOf="@id/iv_more_about"
-        app:layout_constraintTop_toTopOf="@id/v_more_about"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_about"
-        android:text="@string/more_about"
-        android:textSize="@dimen/more_text_size"
-        android:textColor="@color/more_text"
-        android:gravity="center"
-        android:visibility="gone"/>
-
-    <ImageView
-        android:id="@+id/iv_more_about_next"
-        android:layout_width="25dp"
-        android:layout_height="@dimen/more_function_height"
-        app:layout_constraintEnd_toEndOf="@id/v_more_about"
-        app:layout_constraintTop_toTopOf="@id/v_more_about"
-        app:layout_constraintBottom_toBottomOf="@id/v_more_about"
-        android:paddingTop="@dimen/more_image_small_padding"
-        android:paddingBottom="@dimen/more_image_small_padding"
-        android:src="@drawable/more_next"
-        android:scaleType="fitCenter"
-        android:layout_marginEnd="20dp"
-        android:visibility="gone"/>
-
-    <!-- separator -->
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/v_more_about"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:background="@color/more_separator"/>
-
-</android.support.constraint.ConstraintLayout>
+                <ImageView
+                    android:id="@+id/iv_more_about"
+                    style="@style/ZySettingsIcon"
+                    android:src="@drawable/more_about" />
+                <TextView style="@style/ZySettingsTitle" android:text="@string/more_about" />
+                <TextView style="@style/ZySettingsChevron" android:text="›" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

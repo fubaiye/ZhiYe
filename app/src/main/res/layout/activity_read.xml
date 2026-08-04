@@ -66,7 +66,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:background="@color/read_setting_bg"
+        android:background="@drawable/zy_reader_sheet_dark"
         android:visibility="gone"
         android:clickable="true"
         android:focusable="true">
@@ -102,7 +102,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:background="@color/read_setting_bg"
+        android:background="@drawable/zy_reader_sheet_dark"
+        android:elevation="@dimen/zy_elevation_nav"
         android:visibility="gone"
         android:clickable="true"
         android:focusable="true">
@@ -274,7 +275,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:background="@color/read_setting_bg"
+        android:background="@drawable/zy_reader_sheet_dark"
+        android:elevation="@dimen/zy_elevation_nav"
         android:visibility="gone"
         android:clickable="true"
         android:focusable="true">
@@ -354,7 +356,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:background="@color/read_setting_bg"
+        android:background="@drawable/zy_reader_sheet_dark"
+        android:elevation="@dimen/zy_elevation_nav"
         android:clickable="true"
         android:focusable="true"
         android:visibility="gone">

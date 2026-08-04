@@ -18,6 +18,7 @@ import android.view.ViewAnimationUtils;
 import android.view.Window;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.feng.freader.R;
 import com.feng.freader.base.BaseActivity;
@@ -35,7 +36,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
 
     private static final String TAG = "fzh";
 
-    private static final int DUR_BOTTOM_BAR_ICON_ANIM = 500;
+    private static final int DUR_BOTTOM_BAR_ICON_ANIM = 200;
     private static final int REQUEST_CODE_SD = 1;
 
     private static final int FG_BOOKSHELF = 0;
@@ -55,6 +56,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
     private ImageView mBookshelfAfterIv;
     private ImageView mDiscoveryAfterIv;
     private ImageView mMoreAfterIv;
+    private TextView mBookshelfTv;
+    private TextView mDiscoveryTv;
+    private TextView mMoreTv;
 
     private Animator mBookshelfAnim;
     private Animator mDiscoveryAnim;
@@ -102,6 +106,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
         mBookshelfAfterIv= findViewById(R.id.iv_main_bottom_bar_bookshelf_after);
         mDiscoveryAfterIv = findViewById(R.id.iv_main_bottom_bar_discovery_after);
         mMoreAfterIv = findViewById(R.id.iv_main_bottom_bar_more_after);
+        mBookshelfTv = findViewById(R.id.tv_main_bottom_bar_bookshelf);
+        mDiscoveryTv = findViewById(R.id.tv_main_bottom_bar_discovery);
+        mMoreTv = findViewById(R.id.tv_main_bottom_bar_more);
+        updateBottomNavigationState(FG_BOOKSHELF);
     }
 
     @Override
@@ -166,6 +174,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
                 initBookshelfShowAnim();
                 mBookshelfAfterIv.setVisibility(View.VISIBLE);
                 mBookshelfAnim.start();
+                updateBottomNavigationState(FG_BOOKSHELF);
                 // 切换 Fragment
                 changeFragment(FG_BOOKSHELF);
                 // 改变状态栏颜色
@@ -185,6 +194,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
                 initDiscoveryShowAnim();
                 mDiscoveryAfterIv.setVisibility(View.VISIBLE);
                 mDiscoveryAnim.start();
+                updateBottomNavigationState(FG_DISCOVERY);
                 // 切换 Fragment
                 changeFragment(FG_DISCOVERY);
                 // 改变状态栏颜色
@@ -204,6 +214,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
                 initMoreShowAnim();
                 mMoreAfterIv.setVisibility(View.VISIBLE);
                 mMoreAnim.start();
+                updateBottomNavigationState(FG_MORE);
                 // 切换 Fragment
                 changeFragment(FG_MORE);
                 // 改变状态栏颜色
@@ -212,6 +223,35 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
             default:
                 break;
         }
+    }
+
+    private void updateBottomNavigationState(int selected) {
+        if (mBookshelfTv == null || mDiscoveryTv == null || mMoreTv == null) {
+            return;
+        }
+        mBookshelfTv.setSelected(selected == FG_BOOKSHELF);
+        mDiscoveryTv.setSelected(selected == FG_DISCOVERY);
+        mMoreTv.setSelected(selected == FG_MORE);
+        View selectedView = selected == FG_BOOKSHELF ? mBookshelfBg
+                : selected == FG_DISCOVERY ? mDiscoveryBg : mMoreBg;
+        animateNavItem(selectedView);
+    }
+
+    private void animateNavItem(final View view) {
+        if (view == null) {
+            return;
+        }
+        view.animate()
+                .scaleX(0.97f)
+                .scaleY(0.97f)
+                .setDuration(80)
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        view.animate().scaleX(1f).scaleY(1f).setDuration(120).start();
+                    }
+                })
+                .start();
     }
 
     /**

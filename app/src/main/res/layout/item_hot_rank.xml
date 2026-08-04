@@ -6,7 +6,9 @@
     android:minWidth="200dp"
     android:minHeight="210dp"
     android:paddingEnd="7dp"
-    android:paddingStart="7dp">
+    android:paddingStart="7dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp">
 
     <!-- rank name -->
 
@@ -17,9 +19,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:background="@drawable/shape_item_hot_rank_rank_name_bg"
-        android:textColor="@android:color/white"
-        android:textSize="20sp"
+        android:background="@drawable/zy_card"
+        android:elevation="@dimen/zy_elevation_card"
+        android:textColor="@color/zy_primary"
+        android:textSize="19sp"
+        android:textStyle="bold"
         android:gravity="center"
         android:clickable="true"
         android:focusable="true"/>
@@ -39,7 +43,7 @@
         android:gravity="center|start"
         android:paddingStart="@dimen/item_hot_rank_novel_name_text_padding"
         android:paddingEnd="@dimen/item_hot_rank_novel_name_text_padding"
-        android:background="@drawable/selector_item_hot_rank_novel_name_bg"
+        android:background="@drawable/zy_card_soft"
         android:maxLines="1"
         android:ellipsize="end"
         android:clickable="true"
@@ -58,7 +62,7 @@
         android:gravity="center|start"
         android:paddingStart="@dimen/item_hot_rank_novel_name_text_padding"
         android:paddingEnd="@dimen/item_hot_rank_novel_name_text_padding"
-        android:background="@drawable/selector_item_hot_rank_novel_name_bg_2"
+        android:background="@drawable/zy_card_soft"
         android:maxLines="1"
         android:ellipsize="end"
         android:clickable="true"
@@ -77,7 +81,7 @@
         android:gravity="center|start"
         android:paddingStart="@dimen/item_hot_rank_novel_name_text_padding"
         android:paddingEnd="@dimen/item_hot_rank_novel_name_text_padding"
-        android:background="@drawable/shape_item_hot_rank_third_name_bg"
+        android:background="@drawable/zy_card_soft"
         android:maxLines="1"
         android:ellipsize="end"
         android:clickable="true"

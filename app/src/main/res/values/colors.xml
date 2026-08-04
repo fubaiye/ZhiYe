@@ -3,40 +3,55 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">@android:color/holo_blue_light</color>
+    <color name="zy_background">#F6F7F9</color>
+    <color name="zy_surface">#FFFFFF</color>
+    <color name="zy_surface_soft">#FBFCFE</color>
+    <color name="zy_surface_glass">#F2FFFFFF</color>
+    <color name="zy_primary">#4F7CF7</color>
+    <color name="zy_secondary">#6FC9E9</color>
+    <color name="zy_success">#55C271</color>
+    <color name="zy_divider">#ECECEC</color>
+    <color name="zy_text_primary">#222222</color>
+    <color name="zy_text_secondary">#888888</color>
+    <color name="zy_text_tertiary">#B4B7BE</color>
+    <color name="zy_shadow">#1A1F2A44</color>
+    <color name="zy_warm_reader">#F3E7C8</color>
+    <color name="zy_green_reader">#D4F2D7</color>
+    <color name="zy_amoled">#000000</color>
 
     <!-- app -->
-    <color name="progress_bar">@android:color/holo_blue_light</color>
+    <color name="progress_bar">@color/zy_primary</color>
 
     <!-- main -->
-    <color name="color_main_bottom_bar_bg">#fafafa</color>
-    <color name="color_main_bottom_bar_text">#444444</color>
-    <color name="color_main_bottom_bar_text_before">#444444</color>
-    <color name="color_main_bottom_bar_text_after">@android:color/holo_orange_light</color>
-    <color name="color_main_bottom_bar_separator">#bbbbbb</color>
+    <color name="color_main_bottom_bar_bg">@color/zy_surface_glass</color>
+    <color name="color_main_bottom_bar_text">@color/zy_text_secondary</color>
+    <color name="color_main_bottom_bar_text_before">@color/zy_text_secondary</color>
+    <color name="color_main_bottom_bar_text_after">@color/zy_primary</color>
+    <color name="color_main_bottom_bar_separator">@color/zy_divider</color>
 
     <!-- bookshelf -->
-    <color name="bookshelf_bg">#fafafa</color>
-    <color name="bookshelf_add_text">#333333</color>
+    <color name="bookshelf_bg">@color/zy_background</color>
+    <color name="bookshelf_add_text">@color/zy_text_primary</color>
     <color name="bookshelf_multi_delete_bar_bg">#e1e1e1</color>
     <color name="bookshelf_multi_delete_bar_text">#777777</color>
 
     <!-- discovery -->
-    <color name="discovery_bg">#fdfdfd</color>
+    <color name="discovery_bg">@color/zy_background</color>
 
-    <color name="discovery_all_book_bg">#f1f1f1</color>
-    <color name="discovery_all_book_text_normal">#909090</color>
-    <color name="discovery_all_book_text_after_pressed">#c1c1c1</color>
+    <color name="discovery_all_book_bg">@color/zy_surface</color>
+    <color name="discovery_all_book_text_normal">@color/zy_text_primary</color>
+    <color name="discovery_all_book_text_after_pressed">@color/zy_primary</color>
 
-    <color name="discovery_search_bg">#f1f1f1</color>
-    <color name="discovery_search_text_indicator">#c1c1c1</color>
+    <color name="discovery_search_bg">@color/zy_surface</color>
+    <color name="discovery_search_text_indicator">@color/zy_text_secondary</color>
 
     <!-- male -->
-    <color name="male_hot_rank_title">#333333</color>
+    <color name="male_hot_rank_title">@color/zy_text_primary</color>
 
     <!-- item_hot_rank -->
     <color name="item_hot_rank_rank_bg">#fdfdfd</color>
-    <color name="item_hot_rank_rank_name_bg">#43b5e5</color>
-    <color name="item_hot_rank_rank_name_bg_pressed">#0091ff</color>
+    <color name="item_hot_rank_rank_name_bg">@color/zy_primary</color>
+    <color name="item_hot_rank_rank_name_bg_pressed">@color/zy_secondary</color>
     <color name="item_hot_rank_novel_name_text">#444444</color>
     <color name="item_hot_rank_novel_name_bg">#f7f7f7</color>
     <color name="item_hot_rank_novel_name_bg_pressed">#e1e1e1</color>
@@ -44,13 +59,13 @@
     <color name="item_hot_rank_novel_name_bg_2_pressed">#e1e1e1</color>
 
     <!-- search -->
-    <color name="search_bg">#fdfdfd</color>
+    <color name="search_bg">@color/zy_background</color>
 
     <color name="search_back_bg_pressed">#e1e1e1</color>
     <color name="search_search_text_bg_pressed">#e1e1e1</color>
     <color name="search_search_text">#333333</color>
-    <color name="search_search_bar_bg">#ececec</color>
-    <color name="search_search_cursor">@android:color/holo_blue_light</color>
+    <color name="search_search_bar_bg">@color/zy_surface</color>
+    <color name="search_search_cursor">@color/zy_primary</color>
 
     <!-- item_novel_source -->
     <color name="item_novel_source_name">#222222</color>
@@ -111,8 +126,8 @@
     <color name="item_bookshelf_novel_name_text">#222222</color>
 
     <!-- read -->
-    <color name="read_setting_bg">#2B211F</color>
-    <color name="read_bottom_bar_text">#6F6A66</color>
+    <color name="read_setting_bg">#1F1715</color>
+    <color name="read_bottom_bar_text">#D9D1CC</color>
     <color name="read_seek_bar_bg">#5B574E</color>
     <color name="read_seek_bar_thumb">#f9f9f9</color>
     <color name="read_brightness_bar_line">#c1c1c1</color>
@@ -124,17 +139,17 @@
     <color name="read_night_mode_bg">#010101</color>
     <color name="read_night_mode_text">#676A71</color>
     <color name="read_night_mode_title">#575757</color>
-    <color name="read_setting_bar_text">#C1BDBC</color>
-    <color name="read_setting_bar_stroke_selected">#EE574F</color>
+    <color name="read_setting_bar_text">#EFE7DF</color>
+    <color name="read_setting_bar_stroke_selected">@color/zy_primary</color>
     <color name="read_catalog_progress_text">#d1d1d1</color>
 
-    <color name="read_theme_0_bg">#D4C4A3</color>
+    <color name="read_theme_0_bg">@color/zy_warm_reader</color>
     <color name="read_theme_0_text">#453417</color>
-    <color name="read_theme_1_bg">#F8F3EF</color>
+    <color name="read_theme_1_bg">#FFFDF8</color>
     <color name="read_theme_1_text">#453417</color>
-    <color name="read_theme_2_bg">#CCE9CD</color>
+    <color name="read_theme_2_bg">@color/zy_green_reader</color>
     <color name="read_theme_2_text">#453417</color>
-    <color name="read_theme_3_bg">#323232</color>
+    <color name="read_theme_3_bg">@color/zy_amoled</color>
     <color name="read_theme_3_text">#D3D2CD</color>
     <color name="read_theme_4_bg">#B69A96</color>
     <color name="read_theme_4_text">#453417</color>
@@ -175,10 +190,10 @@
     <color name="item_screen_bg_selected">@android:color/holo_blue_light</color>
 
     <!-- more -->
-    <color name="more_bg">#fdfdfd</color>
-    <color name="more_text">#353538</color>
-    <color name="more_text_light">#C0C0C0</color>
-    <color name="more_separator">#F7F9FA</color>
+    <color name="more_bg">@color/zy_background</color>
+    <color name="more_text">@color/zy_text_primary</color>
+    <color name="more_text_light">@color/zy_text_secondary</color>
+    <color name="more_separator">@color/zy_background</color>
     <color name="more_function_pressed">#eaeaea</color>
 
     <color name="color_item_bottom_text">#555555</color>
