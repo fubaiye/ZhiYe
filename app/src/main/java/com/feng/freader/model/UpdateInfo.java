@@ -12,6 +12,12 @@ import java.util.regex.Pattern;
 public class UpdateInfo {
     private static final Pattern VERSION_CODE_PATTERN =
             Pattern.compile("(?:code|vc|versionCode)[-_+]?([0-9]+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern RELEASE_DOWNLOAD_PATTERN = Pattern.compile(
+            "(https://github\\.com)?(/fubaiye/ZhiYe/releases/download/([^/\"'<>\\s]+)/([^/\"'<>\\s]+\\.apk))",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern RELEASE_TAG_PATTERN = Pattern.compile(
+            "/fubaiye/ZhiYe/releases/tag/([^\"'<>\\s]+)",
+            Pattern.CASE_INSENSITIVE);
 
     private int versionCode;
     private String versionName;
@@ -58,6 +64,36 @@ public class UpdateInfo {
         } catch (Throwable ignored) {
             return new UpdateInfo();
         }
+    }
+
+    public static UpdateInfo fromGitHubReleaseAtom(String atom) {
+        return fromGitHubReleasePage(unescapeHtml(atom));
+    }
+
+    public static UpdateInfo fromGitHubReleasePage(String html) {
+        UpdateInfo info = new UpdateInfo();
+        String page = unescapeHtml(html);
+        Matcher downloadMatcher = RELEASE_DOWNLOAD_PATTERN.matcher(page);
+        if (downloadMatcher.find()) {
+            String path = downloadMatcher.group(2);
+            String tagName = downloadMatcher.group(3);
+            String assetName = downloadMatcher.group(4);
+            info.apkUrl = "https://github.com" + path;
+            info.versionName = normalizeVersionName(tagName);
+            info.versionCode = parseVersionCode(tagName);
+            if (info.versionCode <= 0) {
+                info.versionCode = parseVersionCode(assetName);
+            }
+        }
+        if (info.versionCode <= 0) {
+            Matcher tagMatcher = RELEASE_TAG_PATTERN.matcher(page);
+            if (tagMatcher.find()) {
+                String tagName = tagMatcher.group(1);
+                info.versionName = normalizeVersionName(tagName);
+                info.versionCode = parseVersionCode(tagName);
+            }
+        }
+        return info;
     }
 
     public boolean isValid() {
@@ -112,6 +148,15 @@ public class UpdateInfo {
             version = version.substring(0, metadataIndex);
         }
         return version;
+    }
+
+    private static String unescapeHtml(String text) {
+        return emptyIfNull(text)
+                .replace("&amp;", "&")
+                .replace("&quot;", "\"")
+                .replace("&#39;", "'")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">");
     }
 
     private static int parseVersionCode(String text) {

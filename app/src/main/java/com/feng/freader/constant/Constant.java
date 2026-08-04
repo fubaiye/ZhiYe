@@ -78,6 +78,10 @@ public class Constant {
     public static final String UPDATE_REPOSITORY = "fubaiye/ZhiYe";
     public static final String UPDATE_RELEASE_API_URL =
             "https://api.github.com/repos/" + UPDATE_REPOSITORY + "/releases/latest";
+    public static final String UPDATE_RELEASE_ATOM_URL =
+            "https://github.com/" + UPDATE_REPOSITORY + "/releases.atom";
+    public static final String UPDATE_RELEASE_PAGE_URL =
+            "https://github.com/" + UPDATE_REPOSITORY + "/releases/latest";
 
     /* 分类小说相关 */
     // gender
