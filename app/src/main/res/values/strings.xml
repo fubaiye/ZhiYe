@@ -11,6 +11,15 @@
     <!-- discovery -->
     <string name="discovery_all_book">全部书籍</string>
     <string name="discovery_search_text_indicator">输入小说名称</string>
+    <string name="discovery_search_hint">搜索小说</string>
+    <string name="discovery_today_title">今日推荐</string>
+    <string name="discovery_today_rating">★★★★★ 4.9</string>
+    <string name="discovery_today_subtitle">今日精选 126 本优质小说</string>
+    <string name="discovery_today_action">开始阅读 →</string>
+    <string name="discovery_chip_xuanhuan">玄幻</string>
+    <string name="discovery_chip_city">都市</string>
+    <string name="discovery_chip_history">历史</string>
+    <string name="discovery_chip_mystery">悬疑</string>
     <string name="discovery_male">男生</string>
     <string name="discovery_female">女生</string>
     <string name="discovery_press">出版</string>

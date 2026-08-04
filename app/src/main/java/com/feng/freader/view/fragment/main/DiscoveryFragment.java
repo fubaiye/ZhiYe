@@ -32,6 +32,7 @@ public class DiscoveryFragment extends BaseFragment implements View.OnClickListe
     private static final String TAG = "fzh";
     private View mSearchView;
     private TextView mAllBookTv;
+    private TextView mStartReadingTv;
     private TabLayout mTabLayout;
     private ViewPager mViewPager;
 
@@ -65,6 +66,8 @@ public class DiscoveryFragment extends BaseFragment implements View.OnClickListe
         mSearchView.setOnClickListener(this);
         mAllBookTv = getActivity().findViewById(R.id.tv_discovery_all_book);
         mAllBookTv.setOnClickListener(this);
+        mStartReadingTv = getActivity().findViewById(R.id.tv_discovery_start_reading);
+        mStartReadingTv.setOnClickListener(this);
 
         // TabLayout + ViewPager
         mViewPager = getActivity().findViewById(R.id.vp_discovery_view_pager);
@@ -104,6 +107,7 @@ public class DiscoveryFragment extends BaseFragment implements View.OnClickListe
                 jump2Activity(SearchActivity.class);
                 break;
             case R.id.tv_discovery_all_book:
+            case R.id.tv_discovery_start_reading:
                 if (!NetUtil.hasInternet(getActivity())) {
                     showShortToast("当前无网络，请检查网络后重试");
                     return;

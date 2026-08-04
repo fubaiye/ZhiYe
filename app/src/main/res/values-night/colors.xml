@@ -5,11 +5,12 @@
     <color name="colorAccent">#78D5C0</color>
     <color name="progress_bar">#78D5C0</color>
 
-    <color name="color_main_bottom_bar_bg">#161716</color>
-    <color name="color_main_bottom_bar_text">#D6D2CB</color>
-    <color name="color_main_bottom_bar_text_before">#AFAAA2</color>
-    <color name="color_main_bottom_bar_text_after">#F1B275</color>
-    <color name="color_main_bottom_bar_separator">#2A2D2B</color>
+    <color name="color_main_bottom_bar_bg">#FFFFFF</color>
+    <color name="color_main_bottom_bar_text">#8E8E93</color>
+    <color name="color_main_bottom_bar_text_before">#8E8E93</color>
+    <color name="color_main_bottom_bar_text_after">#4F7CFF</color>
+    <color name="color_main_bottom_bar_separator">#ECECEC</color>
+    <color name="color_main_bottom_bar_capsule">#EDF3FF</color>
 
     <color name="bookshelf_bg">#111312</color>
     <color name="bookshelf_add_text">#ECE7DE</color>

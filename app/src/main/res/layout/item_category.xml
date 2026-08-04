@@ -3,16 +3,17 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/discovery_bg"
-    android:paddingStart="20dp"
-    android:paddingTop="18dp"
-    android:paddingEnd="20dp"
+    android:paddingStart="24dp"
+    android:paddingTop="28dp"
+    android:paddingEnd="24dp"
     android:paddingBottom="8dp">
 
     <TextView
         android:id="@+id/tv_item_category_category_name"
         android:layout_width="wrap_content"
-        android:layout_height="36dp"
+        android:layout_height="40dp"
         android:layout_alignParentStart="true"
+        android:fontFamily="sans-serif-medium"
         android:gravity="center"
         android:text="@string/item_category_category_name"
         android:textColor="@color/item_category_category_name"
@@ -22,7 +23,7 @@
     <ImageView
         android:id="@+id/iv_item_category_more"
         android:layout_width="18dp"
-        android:layout_height="36dp"
+        android:layout_height="40dp"
         android:layout_alignParentEnd="true"
         android:scaleType="centerInside"
         android:src="@drawable/item_category_more" />
@@ -30,8 +31,9 @@
     <TextView
         android:id="@+id/tv_item_category_more"
         android:layout_width="wrap_content"
-        android:layout_height="36dp"
+        android:layout_height="40dp"
         android:layout_toStartOf="@id/iv_item_category_more"
+        android:fontFamily="sans-serif-medium"
         android:gravity="center"
         android:text="@string/item_category_more"
         android:textColor="@color/item_category_more"
@@ -42,13 +44,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/tv_item_category_category_name"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="16dp"
         android:background="@drawable/zy_card"
         android:clipToPadding="false"
         android:elevation="@dimen/zy_elevation_card"
         android:paddingStart="8dp"
-        android:paddingTop="14dp"
+        android:paddingTop="16dp"
         android:paddingEnd="8dp"
-        android:paddingBottom="12dp" />
+        android:paddingBottom="16dp" />
 
 </RelativeLayout>

@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.feng.freader.R;
 
@@ -53,6 +54,8 @@ public class CategoryNovelAdapter extends RecyclerView.Adapter<CategoryNovelAdap
         Glide.with(mContext)
                 .load(mCoverList.get(i))
                 .apply(new RequestOptions()
+                    .centerCrop()
+                    .transform(new RoundedCorners(dpToPx(12)))
                     .placeholder(R.drawable.cover_place_holder)
                     .error(R.drawable.cover_error))
                 .into(categoryNovelViewHolder.cover);
@@ -68,6 +71,10 @@ public class CategoryNovelAdapter extends RecyclerView.Adapter<CategoryNovelAdap
     @Override
     public int getItemCount() {
         return mCoverList.size();
+    }
+
+    private int dpToPx(int dp) {
+        return (int) (dp * mContext.getResources().getDisplayMetrics().density + 0.5f);
     }
 
     class CategoryNovelViewHolder extends RecyclerView.ViewHolder {

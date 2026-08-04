@@ -7,7 +7,7 @@
     <color name="zy_surface">#FFFFFF</color>
     <color name="zy_surface_soft">#FBFCFE</color>
     <color name="zy_surface_glass">#F2FFFFFF</color>
-    <color name="zy_primary">#4F7CF7</color>
+    <color name="zy_primary">#4F7CFF</color>
     <color name="zy_secondary">#6FC9E9</color>
     <color name="zy_success">#55C271</color>
     <color name="zy_divider">#ECECEC</color>
@@ -24,10 +24,11 @@
 
     <!-- main -->
     <color name="color_main_bottom_bar_bg">#FFFFFF</color>
-    <color name="color_main_bottom_bar_text">#2F3542</color>
-    <color name="color_main_bottom_bar_text_before">#3F4653</color>
-    <color name="color_main_bottom_bar_text_after">#2F64E8</color>
-    <color name="color_main_bottom_bar_separator">@color/zy_divider</color>
+    <color name="color_main_bottom_bar_text">#8E8E93</color>
+    <color name="color_main_bottom_bar_text_before">#8E8E93</color>
+    <color name="color_main_bottom_bar_text_after">#4F7CFF</color>
+    <color name="color_main_bottom_bar_separator">#ECECEC</color>
+    <color name="color_main_bottom_bar_capsule">#EDF3FF</color>
 
     <!-- bookshelf -->
     <color name="bookshelf_bg">@color/zy_background</color>
@@ -44,6 +45,12 @@
 
     <color name="discovery_search_bg">@color/zy_surface</color>
     <color name="discovery_search_text_indicator">@color/zy_text_secondary</color>
+    <color name="discovery_chip_bg_selected">#EDF3FF</color>
+    <color name="discovery_chip_bg_normal">#F7F8FA</color>
+    <color name="discovery_chip_text_selected">#4F7CFF</color>
+    <color name="discovery_chip_text_normal">#666666</color>
+    <color name="discovery_rating">#4F7CFF</color>
+    <color name="discovery_cover_shadow">#1F000000</color>
 
     <!-- male -->
     <color name="male_hot_rank_title">@color/zy_text_primary</color>

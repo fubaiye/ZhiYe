@@ -5,6 +5,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.TimeInterpolator;
 import android.content.pm.PackageManager;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -17,6 +18,7 @@ import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.Window;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -50,6 +52,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
     private View mBookshelfBg;
     private View mDiscoveryBg;
     private View mMoreBg;
+    private View mBookshelfCapsule;
+    private View mDiscoveryCapsule;
+    private View mMoreCapsule;
     private ImageView mBookshelfBeforeIv;
     private ImageView mDiscoveryBeforeIv;
     private ImageView mMoreBeforeIv;
@@ -64,6 +69,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
     private Animator mDiscoveryAnim;
     private Animator mMoreAnim;
     private TimeInterpolator mTimeInterpolator = new AccelerateDecelerateInterpolator();
+    private TimeInterpolator mNavPressInterpolator = new DecelerateInterpolator(1.6f);
 
     private FragmentManager mFragmentManager = getSupportFragmentManager();
     private Fragment mBookshelfFragment;
@@ -99,6 +105,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
         mDiscoveryBg.setOnClickListener(this);
         mMoreBg = findViewById(R.id.v_main_bottom_bar_more_bg);
         mMoreBg.setOnClickListener(this);
+        mBookshelfCapsule = findViewById(R.id.v_main_bottom_bar_bookshelf_capsule);
+        mDiscoveryCapsule = findViewById(R.id.v_main_bottom_bar_discovery_capsule);
+        mMoreCapsule = findViewById(R.id.v_main_bottom_bar_more_capsule);
 
         mBookshelfBeforeIv = findViewById(R.id.iv_main_bottom_bar_bookshelf_before);
         mDiscoveryBeforeIv = findViewById(R.id.iv_main_bottom_bar_discovery_before);
@@ -109,6 +118,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
         mBookshelfTv = findViewById(R.id.tv_main_bottom_bar_bookshelf);
         mDiscoveryTv = findViewById(R.id.tv_main_bottom_bar_discovery);
         mMoreTv = findViewById(R.id.tv_main_bottom_bar_more);
+        initNavTextTypefaces();
         updateBottomNavigationState(FG_BOOKSHELF);
     }
 
@@ -229,26 +239,79 @@ public class MainActivity extends BaseActivity implements View.OnClickListener{
         if (mBookshelfTv == null || mDiscoveryTv == null || mMoreTv == null) {
             return;
         }
-        mBookshelfTv.setSelected(selected == FG_BOOKSHELF);
-        mDiscoveryTv.setSelected(selected == FG_DISCOVERY);
-        mMoreTv.setSelected(selected == FG_MORE);
-        View selectedView = selected == FG_BOOKSHELF ? mBookshelfBg
-                : selected == FG_DISCOVERY ? mDiscoveryBg : mMoreBg;
-        animateNavItem(selectedView);
+        updateNavItem(mBookshelfTv, mBookshelfCapsule, selected == FG_BOOKSHELF);
+        updateNavItem(mDiscoveryTv, mDiscoveryCapsule, selected == FG_DISCOVERY);
+        updateNavItem(mMoreTv, mMoreCapsule, selected == FG_MORE);
+        animateNavItem(selected);
     }
 
-    private void animateNavItem(final View view) {
+    private void initNavTextTypefaces() {
+        applyNavTypeface(mBookshelfTv, false);
+        applyNavTypeface(mDiscoveryTv, false);
+        applyNavTypeface(mMoreTv, false);
+    }
+
+    private void updateNavItem(TextView textView, final View capsule, boolean selected) {
+        if (textView != null) {
+            textView.setSelected(selected);
+            applyNavTypeface(textView, selected);
+        }
+        if (capsule == null) {
+            return;
+        }
+        if (selected) {
+            capsule.setVisibility(View.VISIBLE);
+            capsule.animate().alpha(1f).setDuration(180).setInterpolator(mNavPressInterpolator).start();
+        } else {
+            capsule.animate().alpha(0f).setDuration(120).setInterpolator(mNavPressInterpolator)
+                    .withEndAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            capsule.setVisibility(View.INVISIBLE);
+                        }
+                    }).start();
+        }
+    }
+
+    private void applyNavTypeface(TextView textView, boolean selected) {
+        if (textView == null) {
+            return;
+        }
+        textView.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        textView.getPaint().setFakeBoldText(selected);
+    }
+
+    private void animateNavItem(int selected) {
+        View icon = selected == FG_BOOKSHELF ? mBookshelfAfterIv
+                : selected == FG_DISCOVERY ? mDiscoveryAfterIv : mMoreAfterIv;
+        TextView text = selected == FG_BOOKSHELF ? mBookshelfTv
+                : selected == FG_DISCOVERY ? mDiscoveryTv : mMoreTv;
+        View capsule = selected == FG_BOOKSHELF ? mBookshelfCapsule
+                : selected == FG_DISCOVERY ? mDiscoveryCapsule : mMoreCapsule;
+        animateNavPart(icon);
+        animateNavPart(text);
+        animateNavPart(capsule);
+    }
+
+    private void animateNavPart(final View view) {
         if (view == null) {
             return;
         }
+        view.animate().cancel();
         view.animate()
-                .scaleX(0.97f)
-                .scaleY(0.97f)
-                .setDuration(80)
+                .scaleX(0.92f)
+                .scaleY(0.92f)
+                .setDuration(70)
+                .setInterpolator(mNavPressInterpolator)
                 .withEndAction(new Runnable() {
                     @Override
                     public void run() {
-                        view.animate().scaleX(1f).scaleY(1f).setDuration(120).start();
+                        view.animate()
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .setDuration(110)
+                                .setInterpolator(mNavPressInterpolator)
+                                .start();
                     }
                 })
                 .start();
