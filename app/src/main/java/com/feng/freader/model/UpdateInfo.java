@@ -22,6 +22,7 @@ public class UpdateInfo {
     private int versionCode;
     private String versionName;
     private String apkUrl;
+    private long apkSize;
     private String releaseNotes;
 
     public static UpdateInfo fromJson(String json) {
@@ -53,6 +54,7 @@ public class UpdateInfo {
                     String url = getString(asset, "browser_download_url");
                     if (name.toLowerCase().endsWith(".apk") && url.startsWith("https://")) {
                         info.apkUrl = url;
+                        info.apkSize = getLong(asset, "size");
                         if (info.versionCode <= 0) {
                             info.versionCode = parseVersionCode(name);
                         }
@@ -118,6 +120,10 @@ public class UpdateInfo {
         return emptyIfNull(apkUrl);
     }
 
+    public long getApkSize() {
+        return apkSize;
+    }
+
     public String getReleaseNotes() {
         return emptyIfNull(releaseNotes);
     }
@@ -132,6 +138,18 @@ public class UpdateInfo {
             return "";
         }
         return element.getAsString();
+    }
+
+    private static long getLong(JsonObject object, String key) {
+        try {
+            JsonElement element = object.get(key);
+            if (element == null || element.isJsonNull()) {
+                return 0L;
+            }
+            return element.getAsLong();
+        } catch (Throwable ignored) {
+            return 0L;
+        }
     }
 
     private static String normalizeVersionName(String tagName) {
