@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -909,6 +910,12 @@ public class PageView extends View {
      */
     public void setTextColor(int color) {
         mPaint.setColor(color);
+    }
+
+    public void setTypeface(Typeface typeface) {
+        mPaint.setTypeface(typeface);
+        mFirstPosMap.clear();
+        invalidate();
     }
 
     /**

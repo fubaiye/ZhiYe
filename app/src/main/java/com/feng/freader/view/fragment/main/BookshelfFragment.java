@@ -46,8 +46,6 @@ import com.feng.freader.widget.TipDialog;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-import org.w3c.dom.Text;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -62,6 +60,8 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
         implements View.OnClickListener, IBookshelfContract.View {
 
     private static final String TAG = "BookshelfFragment";
+    private static final int REQUEST_IMPORT_BOOK = 1;
+    private static final int REQUEST_PICK_COVER = 2;
 
     private RecyclerView mBookshelfNovelsRv;
     private TextView mLocalAddTv;
@@ -81,6 +81,7 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
 
     private DatabaseManager mDbManager;
     private BookshelfMetaManager mBookshelfMetaManager;
+    private String mPendingCoverNovelUrl;
 
     @Override
     protected void doInOnCreate() {
@@ -155,7 +156,7 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
                         | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
-                startActivityForResult(intent, 1);
+                startActivityForResult(intent, REQUEST_IMPORT_BOOK);
                 break;
             case R.id.tv_bookshelf_multi_delete_select_all:
                 // 全选
@@ -250,6 +251,10 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
             if (uri == null) {
                 return;
             }
+            if (requestCode == REQUEST_PICK_COVER) {
+                updatePickedCover(uri);
+                return;
+            }
             try {
                 getActivity().getContentResolver().takePersistableUriPermission(uri,
                         Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -308,6 +313,30 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
     /**
      * 查询所有书籍信息成功
      */
+    private void updatePickedCover(Uri uri) {
+        if (TextUtils.isEmpty(mPendingCoverNovelUrl)) {
+            return;
+        }
+        try {
+            getActivity().getContentResolver().takePersistableUriPermission(uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (Throwable ignored) {
+        }
+        for (BookshelfNovelDbData book : mDataList) {
+            if (mPendingCoverNovelUrl.equals(book.getNovelUrl())) {
+                String cover = uri.toString();
+                mDbManager.updateBookshelfNovelMetadata(book.getNovelUrl(), book.getName(), cover);
+                book.setCover(cover);
+                if (mBookshelfNovelsAdapter != null) {
+                    mBookshelfNovelsAdapter.notifyDataSetChanged();
+                }
+                showShortToast("封面已更新");
+                break;
+            }
+        }
+        mPendingCoverNovelUrl = null;
+    }
+
     @Override
     public void queryAllBookSuccess(List<BookshelfNovelDbData> dataList) {
         dataList = mBookshelfMetaManager.sort(dataList, BookshelfMetaManager.SORT_DEFAULT);
@@ -423,18 +452,23 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
      */
     private void showBookActionMenu(final int position) {
         PopupMenu popupMenu = new PopupMenu(getActivity(), mBookshelfNovelsRv);
-        popupMenu.getMenu().add(0, 1, 0, "导出 TXT");
-        popupMenu.getMenu().add(0, 2, 1, "导出 EPUB");
-        popupMenu.getMenu().add(0, 3, 2, "多选删除");
-        popupMenu.getMenu().add(0, 4, 3, "置顶/取消置顶");
-        popupMenu.getMenu().add(0, 5, 4, "收藏/取消收藏");
-        popupMenu.getMenu().add(0, 6, 5, "设置分类");
-        popupMenu.getMenu().add(0, 7, 6, "按最近排序");
-        popupMenu.getMenu().add(0, 8, 7, "按收藏排序");
-        popupMenu.getMenu().add(0, 9, 8, "按进度排序");
+        popupMenu.getMenu().add(0, 10, 0, "编辑书籍");
+        popupMenu.getMenu().add(0, 1, 1, "导出 TXT");
+        popupMenu.getMenu().add(0, 2, 2, "导出 EPUB");
+        popupMenu.getMenu().add(0, 3, 3, "多选删除");
+        popupMenu.getMenu().add(0, 4, 4, "置顶/取消置顶");
+        popupMenu.getMenu().add(0, 5, 5, "收藏/取消收藏");
+        popupMenu.getMenu().add(0, 6, 6, "设置分类");
+        popupMenu.getMenu().add(0, 7, 7, "按最近排序");
+        popupMenu.getMenu().add(0, 8, 8, "按收藏排序");
+        popupMenu.getMenu().add(0, 9, 9, "按进度排序");
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
+                if (item.getItemId() == 10) {
+                    showEditBookDialog(position);
+                    return true;
+                }
                 if (item.getItemId() == 1) {
                     exportBook(position, ExportFormat.TXT);
                     return true;
@@ -474,6 +508,110 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
             }
         });
         popupMenu.show();
+    }
+
+    private void showEditBookDialog(final int position) {
+        if (position < 0 || position >= mDataList.size()) {
+            return;
+        }
+        final String[] actions = new String[]{"修改书名", "更换封面", "删除书籍"};
+        new AlertDialog.Builder(getActivity())
+                .setTitle(mDataList.get(position).getName())
+                .setItems(actions, new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(android.content.DialogInterface dialog, int which) {
+                        if (which == 0) {
+                            showRenameBookDialog(position);
+                        } else if (which == 1) {
+                            pickBookCover(position);
+                        } else {
+                            confirmDeleteBook(position);
+                        }
+                    }
+                })
+                .show();
+    }
+
+    private void showRenameBookDialog(final int position) {
+        if (position < 0 || position >= mDataList.size()) {
+            return;
+        }
+        final BookshelfNovelDbData book = mDataList.get(position);
+        final EditText editText = new EditText(getActivity());
+        editText.setSingleLine(true);
+        editText.setText(book.getName());
+        editText.setSelection(editText.length());
+        new AlertDialog.Builder(getActivity())
+                .setTitle("修改书名")
+                .setView(editText)
+                .setNegativeButton("取消", null)
+                .setPositiveButton("保存", new android.content.DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(android.content.DialogInterface dialog, int which) {
+                        String newName = editText.getText().toString().trim();
+                        if (TextUtils.isEmpty(newName)) {
+                            showShortToast("书名不能为空");
+                            return;
+                        }
+                        mDbManager.updateBookshelfNovelMetadata(book.getNovelUrl(), newName, book.getCover());
+                        book.setName(newName);
+                        if (mBookshelfNovelsAdapter != null) {
+                            mBookshelfNovelsAdapter.notifyDataSetChanged();
+                        }
+                        showShortToast("书名已更新");
+                    }
+                })
+                .show();
+    }
+
+    private void pickBookCover(final int position) {
+        if (position < 0 || position >= mDataList.size()) {
+            return;
+        }
+        mPendingCoverNovelUrl = mDataList.get(position).getNovelUrl();
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/*");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        startActivityForResult(intent, REQUEST_PICK_COVER);
+    }
+
+    private void confirmDeleteBook(final int position) {
+        if (position < 0 || position >= mDataList.size()) {
+            return;
+        }
+        new TipDialog.Builder(getActivity())
+                .setContent("确定要删除《" + mDataList.get(position).getName() + "》吗？")
+                .setCancel("不了")
+                .setEnsure("删除")
+                .setOnClickListener(new TipDialog.OnClickListener() {
+                    @Override
+                    public void clickEnsure() {
+                        deleteSingleBook(position);
+                    }
+
+                    @Override
+                    public void clickCancel() {
+                    }
+                })
+                .build()
+                .show();
+    }
+
+    private void deleteSingleBook(int position) {
+        if (position < 0 || position >= mDataList.size()) {
+            return;
+        }
+        mDbManager.deleteBookshelfNovel(mDataList.get(position).getNovelUrl());
+        mDataList.remove(position);
+        if (position < mCheckedList.size()) {
+            mCheckedList.remove(position);
+        }
+        if (mBookshelfNovelsAdapter != null) {
+            mBookshelfNovelsAdapter.notifyDataSetChanged();
+        }
+        showShortToast("已删除");
     }
 
     private void startMultiDelete() {

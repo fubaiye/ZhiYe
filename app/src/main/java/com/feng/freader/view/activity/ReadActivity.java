@@ -2,6 +2,7 @@ package com.feng.freader.view.activity;
 
 import android.content.Intent;
 import android.database.ContentObserver;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Handler;
 import android.provider.Settings;
@@ -38,6 +39,7 @@ import com.feng.freader.entity.eventbus.Event;
 import com.feng.freader.entity.eventbus.HoldReadActivityEvent;
 import com.feng.freader.http.UrlObtainer;
 import com.feng.freader.presenter.ReadPresenter;
+import com.feng.freader.reader.ReaderDisplayPolicy;
 import com.feng.freader.reader.ReaderProfileManager;
 import com.feng.freader.reader.ReaderRecord;
 import com.feng.freader.util.EpubUtils;
@@ -109,6 +111,9 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
     private ImageView mIncreaseFontIv;
     private ImageView mDecreaseRowSpaceIv;
     private ImageView mIncreaseRowSpaceIv;
+    private TextView mFontSizeValueTv;
+    private TextView mRowSpaceValueTv;
+    private TextView mFontFamilyTv;
     private View mTheme0;
     private View mTheme1;
     private View mTheme2;
@@ -160,14 +165,15 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
     private float mBrightness;  // 屏幕亮度，为 -1 时表示系统亮度
     private boolean mIsNightMode;           // 是否为夜间模式
     private int mTurnType;      // 翻页模式：0 为正常，1 为仿真
+    private int mReaderFont;
 
     private ReaderProfileManager mReaderProfileManager;
     private long mReadingStartMs;
 
-    private float mMinTextSize = 36f;
-    private float mMaxTextSize = 76f;
-    private float mMinRowSpace = 0f;
-    private float mMaxRowSpace = 48f;
+    private float mMinTextSize = ReaderDisplayPolicy.MIN_FONT_SIZE;
+    private float mMaxTextSize = ReaderDisplayPolicy.MAX_FONT_SIZE;
+    private float mMinRowSpace = ReaderDisplayPolicy.MIN_ROW_SPACE;
+    private float mMaxRowSpace = ReaderDisplayPolicy.MAX_ROW_SPACE;
 
     // 监听系统亮度的变化
     private ContentObserver mBrightnessObserver = new ContentObserver(new Handler()) {
@@ -209,12 +215,13 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         mSecondPosition = getIntent().getIntExtra(KEY_SECOND_POSITION, 0);
 
         // 从 SP 得到
-        mTextSize = SpUtil.getTextSize();
-        mRowSpace = SpUtil.getRowSpace();
+        mTextSize = ReaderDisplayPolicy.clampFontSize(SpUtil.getTextSize());
+        mRowSpace = ReaderDisplayPolicy.clampRowSpace(SpUtil.getRowSpace());
         mTheme = SpUtil.getTheme();
         mBrightness = SpUtil.getBrightness();
         mIsNightMode = SpUtil.getIsNightMode();
         mTurnType = SpUtil.getTurnType();
+        mReaderFont = ReaderDisplayPolicy.normalizeFontIndex(SpUtil.getReaderFont());
 
         // 其他
         mDbManager = DatabaseManager.getInstance();
@@ -416,6 +423,12 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         mDecreaseRowSpaceIv.setOnClickListener(this);
         mIncreaseRowSpaceIv = findViewById(R.id.iv_read_increase_row_space);
         mIncreaseRowSpaceIv.setOnClickListener(this);
+        mFontSizeValueTv = findViewById(R.id.tv_read_font_size_value);
+        mRowSpaceValueTv = findViewById(R.id.tv_read_row_space_value);
+        mFontFamilyTv = findViewById(R.id.tv_read_font_family);
+        mFontFamilyTv.setOnClickListener(this);
+        applyReaderFont();
+        updateReaderSettingLabels();
         mTheme0 = findViewById(R.id.v_read_theme_0);
         mTheme0.setOnClickListener(this);
         mTheme1 = findViewById(R.id.v_read_theme_1);
@@ -509,6 +522,7 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         SpUtil.saveBrightness(mBrightness);
         SpUtil.saveIsNightMode(mIsNightMode);
         SpUtil.saveTurnType(mTurnType);
+        SpUtil.saveReaderFont(mReaderFont);
 
         // 解除监听
         getContentResolver().unregisterContentObserver(mBrightnessObserver);
@@ -973,6 +987,52 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         void onInput(String text);
     }
 
+    private void updateReaderSettingLabels() {
+        if (mFontSizeValueTv != null) {
+            mFontSizeValueTv.setText(ReaderDisplayPolicy.fontSizeLabel(mTextSize));
+        }
+        if (mRowSpaceValueTv != null) {
+            mRowSpaceValueTv.setText(ReaderDisplayPolicy.rowSpaceLabel(mRowSpace));
+        }
+        if (mFontFamilyTv != null) {
+            mFontFamilyTv.setText("字体 " + ReaderDisplayPolicy.fontName(mReaderFont));
+        }
+    }
+
+    private void showFontDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("选择字体")
+                .setSingleChoiceItems(ReaderDisplayPolicy.FONT_NAMES, mReaderFont,
+                        new android.content.DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(android.content.DialogInterface dialog, int which) {
+                                mReaderFont = ReaderDisplayPolicy.normalizeFontIndex(which);
+                                applyReaderFont();
+                                updateReaderSettingLabels();
+                                dialog.dismiss();
+                            }
+                        })
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    private void applyReaderFont() {
+        mPageView.setTypeface(typefaceFor(mReaderFont));
+    }
+
+    private Typeface typefaceFor(int fontIndex) {
+        switch (ReaderDisplayPolicy.normalizeFontIndex(fontIndex)) {
+            case 1:
+                return Typeface.create("sans-serif-medium", Typeface.NORMAL);
+            case 2:
+                return Typeface.SERIF;
+            case 3:
+                return Typeface.MONOSPACE;
+            default:
+                return Typeface.DEFAULT;
+        }
+    }
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -1048,32 +1108,39 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
                 showSettingBar();
                 break;
             case R.id.iv_read_decrease_font:
-                if (mTextSize == mMinTextSize) {
+                if (mTextSize <= mMinTextSize) {
                     break;
                 }
-                mTextSize--;
+                mTextSize = ReaderDisplayPolicy.decreaseFontSize(mTextSize);
                 mPageView.setTextSize(mTextSize);
+                updateReaderSettingLabels();
                 break;
             case R.id.iv_read_increase_font:
-                if (mTextSize == mMaxTextSize) {
+                if (mTextSize >= mMaxTextSize) {
                     break;
                 }
-                mTextSize++;
+                mTextSize = ReaderDisplayPolicy.increaseFontSize(mTextSize);
                 mPageView.setTextSize(mTextSize);
+                updateReaderSettingLabels();
                 break;
             case R.id.iv_read_decrease_row_space:
-                if (mRowSpace == mMinRowSpace) {
+                if (mRowSpace <= mMinRowSpace) {
                     break;
                 }
-                mRowSpace--;
+                mRowSpace = ReaderDisplayPolicy.decreaseRowSpace(mRowSpace);
                 mPageView.setRowSpace(mRowSpace);
+                updateReaderSettingLabels();
                 break;
             case R.id.iv_read_increase_row_space:
-                if (mRowSpace == mMaxRowSpace) {
+                if (mRowSpace >= mMaxRowSpace) {
                     break;
                 }
-                mRowSpace++;
+                mRowSpace = ReaderDisplayPolicy.increaseRowSpace(mRowSpace);
                 mPageView.setRowSpace(mRowSpace);
+                updateReaderSettingLabels();
+                break;
+            case R.id.tv_read_font_family:
+                showFontDialog();
                 break;
             case R.id.v_read_theme_0:
                 if (!mIsNightMode && mTheme == 0) {

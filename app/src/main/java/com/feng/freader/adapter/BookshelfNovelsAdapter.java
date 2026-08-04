@@ -73,33 +73,18 @@ public class BookshelfNovelsAdapter extends RecyclerView.Adapter {
         contentViewHolder.name.setText(new BookshelfMetaManager(mContext).labelFor(mDataList.get(i)));
         String cover = mDataList.get(i).getCover() == null ? "" : mDataList.get(i).getCover();
         if (mDataList.get(i).getType() == 0) {  // 网络小说
-            Glide.with(mContext)
-                    .load(cover)
-                    .apply(new RequestOptions()
-                            .placeholder(R.drawable.cover_place_holder)
-                            .error(R.drawable.cover_error))
-                    .into(contentViewHolder.cover);
+            loadCover(contentViewHolder.cover, cover, R.drawable.cover_place_holder, R.drawable.cover_error);
         } else if (mDataList.get(i).getType() == 1){    // 本地 txt 小说
-            if (cover.startsWith("http")) {
-                Glide.with(mContext)
-                        .load(cover)
-                        .apply(new RequestOptions()
-                                .placeholder(R.drawable.local_txt)
-                                .error(R.drawable.local_txt))
-                        .into(contentViewHolder.cover);
+            if (canLoadWithGlide(cover)) {
+                loadCover(contentViewHolder.cover, cover, R.drawable.local_txt, R.drawable.local_txt);
             } else {
                 contentViewHolder.cover.setImageResource(R.drawable.local_txt);
             }
         } else if (mDataList.get(i).getType() == 2) {   // 本地 epub 小说
             if (cover.equals("")) {
                 contentViewHolder.cover.setImageResource(R.drawable.local_epub);
-            } else if (cover.startsWith("http")) {
-                Glide.with(mContext)
-                        .load(cover)
-                        .apply(new RequestOptions()
-                                .placeholder(R.drawable.local_epub)
-                                .error(R.drawable.local_epub))
-                        .into(contentViewHolder.cover);
+            } else if (canLoadWithGlide(cover)) {
+                loadCover(contentViewHolder.cover, cover, R.drawable.local_epub, R.drawable.local_epub);
             } else {
                 String coverPath = cover;
                 Bitmap bitmap = FileUtil.loadLocalPicture(coverPath);
@@ -156,6 +141,22 @@ public class BookshelfNovelsAdapter extends RecyclerView.Adapter {
             cover = itemView.findViewById(R.id.iv_item_bookshelf_novel_cover);
             name = itemView.findViewById(R.id.tv_item_bookshelf_novel_name);
         }
+    }
+
+    private void loadCover(ImageView imageView, String cover, int placeholder, int error) {
+        Glide.with(mContext)
+                .load(cover)
+                .apply(new RequestOptions()
+                        .placeholder(placeholder)
+                        .error(error))
+                .into(imageView);
+    }
+
+    private boolean canLoadWithGlide(String cover) {
+        return cover != null
+                && (cover.startsWith("http")
+                || cover.startsWith("content:")
+                || cover.startsWith("file:"));
     }
 
     public void setIsMultiDelete(boolean mIsMultiDelete) {

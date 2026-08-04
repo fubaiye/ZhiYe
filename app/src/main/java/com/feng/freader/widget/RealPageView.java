@@ -13,6 +13,7 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PointF;
+import android.graphics.Typeface;
 import android.graphics.Region;
 import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
@@ -1089,6 +1090,14 @@ public class RealPageView extends PageView{
     /**
      * 设置背景颜色
      */
+    @Override
+    public void setTypeface(Typeface typeface) {
+        super.setTypeface(typeface);
+        mBackPaint.setTypeface(typeface);
+        mFirstPosMap.clear();
+        updateBitmap();
+    }
+
     public void setBgColor(int color) {
         mBgPaint.setColor(color);
     }

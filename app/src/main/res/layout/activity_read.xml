@@ -350,7 +350,7 @@
     <android.support.constraint.ConstraintLayout
         android:id="@+id/cv_read_setting_bar"
         android:layout_width="0dp"
-        android:layout_height="190dp"
+        android:layout_height="230dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -441,6 +441,41 @@
             app:layout_constraintEnd_toEndOf="@id/iv_read_increase_row_space"
             app:layout_constraintStart_toStartOf="@id/iv_read_increase_row_space" />
 
+        <TextView
+            android:id="@+id/tv_read_font_size_value"
+            android:layout_width="0dp"
+            android:layout_height="30dp"
+            android:gravity="center"
+            android:textColor="@color/read_setting_bar_text"
+            android:textSize="13sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/iv_read_decrease_font"
+            app:layout_constraintEnd_toStartOf="@id/tv_read_row_space_value" />
+
+        <TextView
+            android:id="@+id/tv_read_row_space_value"
+            android:layout_width="0dp"
+            android:layout_height="30dp"
+            android:gravity="center"
+            android:textColor="@color/read_setting_bar_text"
+            android:textSize="13sp"
+            app:layout_constraintStart_toEndOf="@id/tv_read_font_size_value"
+            app:layout_constraintTop_toBottomOf="@id/iv_read_decrease_font"
+            app:layout_constraintEnd_toStartOf="@id/tv_read_font_family" />
+
+        <TextView
+            android:id="@+id/tv_read_font_family"
+            android:layout_width="0dp"
+            android:layout_height="30dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:textColor="@color/read_setting_bar_text"
+            android:textSize="13sp"
+            app:layout_constraintStart_toEndOf="@id/tv_read_row_space_value"
+            app:layout_constraintTop_toBottomOf="@id/iv_read_decrease_font"
+            app:layout_constraintEnd_toEndOf="parent" />
+
         <!-- second -->
 
         <View
@@ -448,7 +483,7 @@
             android:layout_width="0dp"
             android:layout_height="@dimen/read_setting_bar_second_height"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/iv_read_decrease_font"
+            app:layout_constraintTop_toBottomOf="@id/tv_read_font_size_value"
             app:layout_constraintBottom_toTopOf="@id/tv_read_turn_real"
             app:layout_constraintEnd_toStartOf="@id/v_read_theme_1"
             android:background="@drawable/selector_read_theme_0"
@@ -462,7 +497,7 @@
             android:layout_width="0dp"
             android:layout_height="@dimen/read_setting_bar_second_height"
             app:layout_constraintStart_toEndOf="@id/v_read_theme_0"
-            app:layout_constraintTop_toBottomOf="@id/iv_read_decrease_font"
+            app:layout_constraintTop_toBottomOf="@id/tv_read_font_size_value"
             app:layout_constraintBottom_toTopOf="@id/tv_read_turn_real"
             app:layout_constraintEnd_toStartOf="@id/v_read_theme_2"
             android:background="@drawable/selector_read_theme_1"
@@ -473,7 +508,7 @@
             android:layout_width="0dp"
             android:layout_height="@dimen/read_setting_bar_second_height"
             app:layout_constraintStart_toEndOf="@id/v_read_theme_1"
-            app:layout_constraintTop_toBottomOf="@id/iv_read_decrease_font"
+            app:layout_constraintTop_toBottomOf="@id/tv_read_font_size_value"
             app:layout_constraintBottom_toTopOf="@id/tv_read_turn_real"
             app:layout_constraintEnd_toStartOf="@id/v_read_theme_3"
             android:background="@drawable/selector_read_theme_2"
@@ -484,7 +519,7 @@
             android:layout_width="0dp"
             android:layout_height="@dimen/read_setting_bar_second_height"
             app:layout_constraintStart_toEndOf="@id/v_read_theme_2"
-            app:layout_constraintTop_toBottomOf="@id/iv_read_decrease_font"
+            app:layout_constraintTop_toBottomOf="@id/tv_read_font_size_value"
             app:layout_constraintBottom_toTopOf="@id/tv_read_turn_real"
             app:layout_constraintEnd_toStartOf="@id/v_read_theme_4"
             android:background="@drawable/selector_read_theme_3"
@@ -495,7 +530,7 @@
             android:layout_width="0dp"
             android:layout_height="@dimen/read_setting_bar_second_height"
             app:layout_constraintStart_toEndOf="@id/v_read_theme_3"
-            app:layout_constraintTop_toBottomOf="@id/iv_read_decrease_font"
+            app:layout_constraintTop_toBottomOf="@id/tv_read_font_size_value"
             app:layout_constraintBottom_toTopOf="@id/tv_read_turn_real"
             app:layout_constraintEnd_toEndOf="parent"
             android:background="@drawable/selector_read_theme_4"
