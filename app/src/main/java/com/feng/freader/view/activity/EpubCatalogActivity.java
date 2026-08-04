@@ -1,8 +1,6 @@
 package com.feng.freader.view.activity;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -18,7 +16,7 @@ import com.feng.freader.entity.epub.EpubTocItem;
 import com.feng.freader.entity.epub.OpfData;
 import com.feng.freader.entity.eventbus.EpubCatalogInitEvent;
 import com.feng.freader.entity.eventbus.Event;
-import com.feng.freader.entity.eventbus.HoldReadActivityEvent;
+import com.feng.freader.reader.EpubChapterIndexResolver;
 import com.feng.freader.util.StatusBarUtil;
 
 import org.greenrobot.eventbus.Subscribe;
@@ -27,12 +25,11 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EpubCatalogActivity extends BaseActivity implements View.OnClickListener{
+public class EpubCatalogActivity extends BaseActivity implements View.OnClickListener {
 
     private ImageView mBackIv;
     private RecyclerView mListRv;
 
-    // 通过 EventBus 初始化
     private ReadActivity mReadActivity;
     private List<EpubTocItem> mEpubTocItemList = new ArrayList<>();
     private OpfData mOpfData;
@@ -44,7 +41,7 @@ public class EpubCatalogActivity extends BaseActivity implements View.OnClickLis
 
     @Override
     protected void doBeforeSetContentView() {
-        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);   //隐藏标题栏
+        supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
     }
 
     @Override
@@ -75,28 +72,15 @@ public class EpubCatalogActivity extends BaseActivity implements View.OnClickLis
         adapter.setOnCatalogListener(new CatalogAdapter.CatalogListener() {
             @Override
             public void clickItem(int position) {
-                mReadActivity.finish();
-                int chapterIndex = 0;
-                // 计算阅读的章节
-                for (int i = 0; i < mOpfData.getSpine().size(); i++) {
-                    if (mEpubTocItemList.get(position).getPath()
-                            .equals(mOpfData.getSpine().get(i))) {
-                        chapterIndex = i;
-                        break;
-                    }
+                if (mReadActivity != null) {
+                    mReadActivity.finish();
                 }
-                // 跳转活动
+                int chapterIndex = EpubChapterIndexResolver.resolve(mEpubTocItemList, mOpfData, position);
                 Intent intent = new Intent(EpubCatalogActivity.this, ReadActivity.class);
-                // 小说 url（本地小说为 filePath），参数类型为 String
                 intent.putExtra(ReadActivity.KEY_NOVEL_URL, mNovelUrl);
-                // 小说名，参数类型为 String
                 intent.putExtra(ReadActivity.KEY_NAME, mName);
-                // 小说封面 url，参数类型为 String
                 intent.putExtra(ReadActivity.KEY_COVER, mCover);
-                // 小说类型，0 为网络小说， 1 为本地 txt 小说，2 为本地 epub 小说
-                // 参数类型为 int（非必需，不传的话默认为 0）
                 intent.putExtra(ReadActivity.KEY_TYPE, 2);
-                // 开始阅读的章节索引，参数类型为 int（非必需，不传的话默认为 0）
                 intent.putExtra(ReadActivity.KEY_CHAPTER_INDEX, chapterIndex);
                 startActivity(intent);
                 finish();
