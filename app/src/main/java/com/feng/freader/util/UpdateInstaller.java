@@ -25,9 +25,11 @@ import java.net.URL;
 public class UpdateInstaller {
     private static final String APK_MIME_TYPE = "application/vnd.android.package-archive";
     private static final String UPDATE_FILE_NAME = "ZhiYe-update.apk";
-    private static final int CONNECT_TIMEOUT_MS = 15000;
-    private static final int READ_TIMEOUT_MS = 30000;
-    private static final int MAX_REDIRECTS = 5;
+    private static final String TEMP_UPDATE_FILE_NAME = UPDATE_FILE_NAME + ".download";
+    private static final int CONNECT_TIMEOUT_MS = 30000;
+    private static final int READ_TIMEOUT_MS = 120000;
+    private static final int MAX_REDIRECTS = 8;
+    private static final int MAX_RETRY_COUNT = 3;
 
     private UpdateInstaller() {
     }
@@ -57,6 +59,7 @@ public class UpdateInstaller {
             return;
         }
         final File apkFile = new File(updateDir, UPDATE_FILE_NAME);
+        final File tempFile = new File(updateDir, TEMP_UPDATE_FILE_NAME);
         final String apkUrl = updateInfo.getApkUrl();
         final long expectedSize = updateInfo.getApkSize();
         showToast(appContext, "正在下载更新包", Toast.LENGTH_SHORT);
@@ -64,28 +67,43 @@ public class UpdateInstaller {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                if (apkFile.exists() && !apkFile.delete()) {
+                if (!deleteIfExists(apkFile) || !deleteIfExists(tempFile)) {
                     postToast(appContext, "无法清理旧更新包");
                     return;
                 }
                 try {
-                    download(apkUrl, apkFile);
+                    downloadWithRetry(apkUrl, tempFile);
+                    if (!tempFile.renameTo(apkFile)) {
+                        throw new IOException("Unable to move update apk");
+                    }
                     if (!ApkFileValidator.isValidApk(apkFile, expectedSize)) {
-                        if (apkFile.exists()) {
-                            apkFile.delete();
-                        }
+                        deleteIfExists(apkFile);
                         postToast(appContext, "更新包校验失败，请稍后重试");
                         return;
                     }
                     postOpenInstaller(appContext, apkFile);
                 } catch (Throwable throwable) {
-                    if (apkFile.exists()) {
-                        apkFile.delete();
-                    }
-                    postToast(appContext, "更新包下载失败，请稍后重试");
+                    deleteIfExists(apkFile);
+                    deleteIfExists(tempFile);
+                    postToast(appContext, "更新包下载失败，请切换网络后重试");
                 }
             }
         }).start();
+    }
+
+    private static void downloadWithRetry(String apkUrl, File tempFile) throws IOException {
+        IOException lastException = null;
+        for (int i = 0; i < MAX_RETRY_COUNT; i++) {
+            try {
+                download(apkUrl, tempFile);
+                return;
+            } catch (IOException e) {
+                lastException = e;
+                deleteIfExists(tempFile);
+                sleepQuietly((i + 1) * 1500L);
+            }
+        }
+        throw lastException == null ? new IOException("Download failed") : lastException;
     }
 
     private static void download(String apkUrl, File apkFile) throws IOException {
@@ -95,7 +113,7 @@ public class UpdateInstaller {
         try {
             inputStream = new BufferedInputStream(connection.getInputStream());
             outputStream = new FileOutputStream(apkFile);
-            byte[] buffer = new byte[16 * 1024];
+            byte[] buffer = new byte[32 * 1024];
             int count;
             while ((count = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, count);
@@ -141,6 +159,18 @@ public class UpdateInstaller {
             throw new IOException("Unexpected http status " + code);
         }
         return connection;
+    }
+
+    private static boolean deleteIfExists(File file) {
+        return file == null || !file.exists() || file.delete();
+    }
+
+    private static void sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private static void postOpenInstaller(final Context context, final File apkFile) {
