@@ -40,38 +40,28 @@ jobs:
           echo "${{ secrets.ZHIYE_RELEASE_KEYSTORE_BASE64 }}" | base64 -d > freader-release.jks
 
       - name: Build APK
+        env:
+          ZHIYE_STORE_FILE: freader-release.jks
+          ZHIYE_STORE_PASSWORD: ${{ secrets.ZHIYE_RELEASE_KEYSTORE_PASSWORD }}
+          ZHIYE_KEY_ALIAS: ${{ secrets.ZHIYE_RELEASE_KEY_ALIAS }}
+          ZHIYE_KEY_PASSWORD: ${{ secrets.ZHIYE_RELEASE_KEY_PASSWORD }}
         run: |
           chmod +x gradlew
           ./gradlew clean :app:testDebugUnitTest :app:assembleRelease --no-daemon
 
-      - name: Sign APK
-        env:
-          KS_PASS: ${{ secrets.ZHIYE_RELEASE_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ZHIYE_RELEASE_KEY_ALIAS }}
-          KEY_PASS: ${{ secrets.ZHIYE_RELEASE_KEY_PASSWORD }}
+      - name: Verify signed APK
         run: |
-          unsigned="app/build/outputs/apk/release/app-release-unsigned.apk"
-          aligned="app/build/outputs/apk/release/ZhiYe-aligned.apk"
-          signed="app/build/outputs/apk/release/ZhiYe-release.apk"
-          "$ANDROID_HOME/build-tools/30.0.3/zipalign" -p -f 4 "$unsigned" "$aligned"
-          "$ANDROID_HOME/build-tools/30.0.3/apksigner" sign \
-            --ks freader-release.jks \
-            --ks-key-alias "$KEY_ALIAS" \
-            --ks-pass "pass:$KS_PASS" \
-            --key-pass "pass:$KEY_PASS" \
-            --out "$signed" \
-            "$aligned"
-          "$ANDROID_HOME/build-tools/30.0.3/apksigner" verify --verbose "$signed"
+          "$ANDROID_HOME/build-tools/30.0.3/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk
 
       - name: Prepare release metadata
         id: version
         run: |
-          badging="$("$ANDROID_HOME/build-tools/30.0.3/aapt" dump badging app/build/outputs/apk/release/ZhiYe-release.apk)"
+          badging="$("$ANDROID_HOME/build-tools/30.0.3/aapt" dump badging app/build/outputs/apk/release/app-release.apk)"
           version_name="$(echo "$badging" | sed -n "s/.*versionName='\([^']*\)'.*/\1/p")"
           version_code="$(echo "$badging" | sed -n "s/.*versionCode='\([^']*\)'.*/\1/p")"
           tag="v${version_name}-code${version_code}"
           apk="ZhiYe-v${version_name}-code${version_code}.apk"
-          cp app/build/outputs/apk/release/ZhiYe-release.apk "$apk"
+          cp app/build/outputs/apk/release/app-release.apk "$apk"
           echo "version_name=$version_name" >> "$GITHUB_OUTPUT"
           echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"

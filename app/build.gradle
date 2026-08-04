@@ -1,5 +1,16 @@
 apply plugin: 'com.android.application'
 
+def zhiyeStoreFile = findProperty('ZHIYE_STORE_FILE') ?: System.getenv('ZHIYE_STORE_FILE')
+def zhiyeStorePassword = findProperty('ZHIYE_STORE_PASSWORD') ?: System.getenv('ZHIYE_STORE_PASSWORD')
+def zhiyeKeyAlias = findProperty('ZHIYE_KEY_ALIAS') ?: System.getenv('ZHIYE_KEY_ALIAS')
+def zhiyeKeyPassword = findProperty('ZHIYE_KEY_PASSWORD') ?: System.getenv('ZHIYE_KEY_PASSWORD')
+def zhiyeResolvedStoreFile = zhiyeStoreFile ? rootProject.file(zhiyeStoreFile) : null
+def hasZhiyeReleaseSigning = zhiyeResolvedStoreFile &&
+        zhiyeStorePassword &&
+        zhiyeKeyAlias &&
+        zhiyeKeyPassword &&
+        zhiyeResolvedStoreFile.exists()
+
 android {
     compileSdkVersion 30
     defaultConfig {
@@ -10,8 +21,23 @@ android {
         versionName "1.16"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    signingConfigs {
+        release {
+            if (hasZhiyeReleaseSigning) {
+                storeFile zhiyeResolvedStoreFile
+                storePassword zhiyeStorePassword
+                keyAlias zhiyeKeyAlias
+                keyPassword zhiyeKeyPassword
+                v1SigningEnabled true
+                v2SigningEnabled true
+            }
+        }
+    }
     buildTypes {
         release {
+            if (hasZhiyeReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
