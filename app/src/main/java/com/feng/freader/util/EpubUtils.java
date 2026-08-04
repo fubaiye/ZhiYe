@@ -1,7 +1,5 @@
 package com.feng.freader.util;
 
-import android.util.Log;
-
 import com.feng.freader.entity.epub.EpubData;
 import com.feng.freader.entity.epub.EpubTocItem;
 import com.feng.freader.entity.epub.OpfData;
@@ -28,8 +26,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class EpubUtils {
-
-    private static final String TAG = "EpubUtils";
 
     /**
      * 将 filePath 的文件解压到 savePath 中
@@ -307,14 +303,16 @@ public class EpubUtils {
      * 解析 html/xhtml 文件，得到章节信息
      */
     public static List<EpubData> getEpubData(String parentPath, String filePath) throws IOException {
-        Log.d(TAG, "getEpubData: filePath = " + filePath);
         List<EpubData> dataList = new ArrayList<>();
         File file = new File(filePath);
         Document document = Jsoup.parse(file, null);
         Elements allElements = document.getAllElements();
         StringBuilder builder = new StringBuilder();    // 存放文本
         for (Element element : allElements) {
-            Log.d(TAG, "getEpubData: run");
+            if (isReadableTextElement(element)) {
+                appendParagraph(builder, element.text());
+                continue;
+            }
             // 该值大于 1 时，表示内部还有其他标签，跳过
             if (element.getAllElements().size() > 1) {
                 continue;
@@ -398,6 +396,37 @@ public class EpubUtils {
         return dataList;
     }
 
+
+    private static boolean isReadableTextElement(Element element) {
+        if (element.is("p") || element.is("blockquote") || element.is("li")) {
+            return !element.text().trim().equals("");
+        }
+        if (element.is("div")) {
+            return !element.text().trim().equals("") && !hasReadableChild(element);
+        }
+        return false;
+    }
+
+    private static boolean hasReadableChild(Element element) {
+        Elements children = element.children();
+        for (Element child : children) {
+            if (child.is("p") || child.is("div") || child.is("blockquote") || child.is("li")
+                    || child.is("h1") || child.is("h2") || child.is("h3") || child.is("h4")
+                    || child.is("h5") || child.is("h6")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void appendParagraph(StringBuilder builder, String text) {
+        String trimText = text == null ? "" : text.trim();
+        if (trimText.equals("")) {
+            return;
+        }
+        builder.append("    ").append(trimText);
+        builder.append("\n");
+    }
 
     private static String getImagePath(String parentPath, String value) {
         String picPath;

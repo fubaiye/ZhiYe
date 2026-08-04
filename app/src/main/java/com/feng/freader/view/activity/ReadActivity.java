@@ -39,6 +39,7 @@ import com.feng.freader.entity.eventbus.Event;
 import com.feng.freader.entity.eventbus.HoldReadActivityEvent;
 import com.feng.freader.http.UrlObtainer;
 import com.feng.freader.presenter.ReadPresenter;
+import com.feng.freader.reader.EpubChapterFallbackPolicy;
 import com.feng.freader.reader.ReaderDisplayPolicy;
 import com.feng.freader.reader.ReaderProfileManager;
 import com.feng.freader.reader.ReaderRecord;
@@ -665,6 +666,18 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
     public void getEpubChapterDataSuccess(List<EpubData> dataList) {
         mIsLoadingChapter = false;
         if (dataList == null || dataList.isEmpty()) {
+            int nextChapter = mOpfData == null ? -1 :
+                    EpubChapterFallbackPolicy.nextCandidate(mOpfData.getSpine(), mChapterIndex);
+            if (nextChapter != -1) {
+                mChapterIndex = nextChapter;
+                mPosition = 0;
+                mSecondPosition = 0;
+                mIsLoadingChapter = true;
+                mStateTv.setText(LOADING_TEXT);
+                mPresenter.getEpubChapterData(mParentPath, mOpfData.getSpine().get(mChapterIndex));
+                updateChapterProgress();
+                return;
+            }
             mStateTv.setText("本章无数据，请查看其他章节");
             return;
         }
