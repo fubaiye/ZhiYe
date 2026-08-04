@@ -13,6 +13,7 @@ import android.view.View;
 
 import com.feng.freader.R;
 import com.feng.freader.entity.epub.EpubData;
+import com.feng.freader.reader.EpubTitleStylePolicy;
 import com.feng.freader.util.FileUtil;
 import com.feng.freader.util.ScreenUtil;
 import com.feng.freader.util.SpUtil;
@@ -305,7 +306,7 @@ public class PageView extends View {
                 currY = mTextSize + paddingTop;
                 break;
             case TITLE:
-                currY = mTextSize + mTextSize + paddingTop;
+                currY = EpubTitleStylePolicy.titleTextSize(mTextSize) + paddingTop;
                 break;
         }
         // 开始绘制
@@ -325,7 +326,7 @@ public class PageView extends View {
                 case TITLE:
                     // 绘制标题
                     String title = epubData.getData();
-                    textPaint.setTextSize(mTextSize * 2);  // 标题的字体更大
+                    textPaint.setTextSize(EpubTitleStylePolicy.titleTextSize(mTextSize));  // 标题字号跟正文一致
                     textPaint.setTextAlign(Paint.Align.CENTER);    // 文字居中
                     while (currY <= height - paddingBottom && mSecondPos < title.length()) {
                         // 1. 计算能够绘制多少个字符
@@ -345,7 +346,7 @@ public class PageView extends View {
                         canvas.drawText(currS, width/2, currY, textPaint);
                         // 3. 更新相关值
                         mSecondPos += num;
-                        currY += mTextSize + mTextSize + mRowSpace;
+                        currY += EpubTitleStylePolicy.titleLineStep(mTextSize, mRowSpace);
                     }
                     // 判断是否绘制完标题
                     if (mSecondPos < title.length()) {  // 没有绘制完
@@ -414,7 +415,7 @@ public class PageView extends View {
                 currY = mTextSize + paddingTop;
                 break;
             case TITLE:
-                currY = mTextSize + mTextSize + paddingTop;
+                currY = EpubTitleStylePolicy.titleTextSize(mTextSize) + paddingTop;
                 break;
         }
         // 开始绘制
@@ -434,7 +435,7 @@ public class PageView extends View {
                 case TITLE:
                     // 绘制标题
                     String title = epubData.getData();
-                    textPaint.setTextSize(mTextSize * 2);  // 标题的字体更大
+                    textPaint.setTextSize(EpubTitleStylePolicy.titleTextSize(mTextSize));  // 标题字号跟正文一致
                     textPaint.setTextAlign(Paint.Align.CENTER);    // 文字居中
                     while (currY <= height - paddingBottom && mNextSecondPos < title.length()) {
                         // 1. 计算能够绘制多少个字符
@@ -454,7 +455,7 @@ public class PageView extends View {
                         canvas.drawText(currS, width/2, currY, textPaint);
                         // 3. 更新相关值
                         mNextSecondPos += num;
-                        currY += mTextSize + mTextSize + mRowSpace;
+                        currY += EpubTitleStylePolicy.titleLineStep(mTextSize, mRowSpace);
                     }
                     // 判断是否绘制完标题
                     if (mNextSecondPos < title.length()) {  // 没有绘制完
@@ -744,7 +745,7 @@ public class PageView extends View {
                         finished = true;
                         break;
                     case TITLE:
-                        float textSize = mTextSize * 2;
+                        float textSize = EpubTitleStylePolicy.titleTextSize(mTextSize);
                         mPaint.setTextSize(textSize);
                         while (remainHeight >= textSize && tempSecond >= 0) {
                             float totalWidth = 0f;
@@ -759,7 +760,7 @@ public class PageView extends View {
                                 num++;
                             }
                             tempSecond -= num;
-                            remainHeight -= textSize + mRowSpace;
+                            remainHeight -= EpubTitleStylePolicy.titleLineStep(mTextSize, mRowSpace);
                         }
                         // 判断是否绘制完
                         if (tempSecond < 0) {  // 绘制完
@@ -830,7 +831,7 @@ public class PageView extends View {
                         finished = true;
                         break;
                     case TITLE:
-                        float textSize = mTextSize * 2;
+                        float textSize = EpubTitleStylePolicy.titleTextSize(mTextSize);
                         mPaint.setTextSize(textSize);
                         while (remainHeight >= textSize && tempSecond >= 0) {
                             float totalWidth = 0f;
@@ -845,7 +846,7 @@ public class PageView extends View {
                                 num++;
                             }
                             tempSecond -= num;
-                            remainHeight -= textSize + mRowSpace;
+                            remainHeight -= EpubTitleStylePolicy.titleLineStep(mTextSize, mRowSpace);
                         }
                         // 判断是否绘制完
                         if (tempSecond < 0) {  // 绘制完
