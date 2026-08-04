@@ -12,8 +12,12 @@ public class SourceTemplate {
         String result = template == null ? "" : template;
         result = result.replace("{{keyword}}", encode(keyword));
         result = result.replace("${keyword}", encode(keyword));
+        result = result.replace("{{key}}", encode(keyword));
+        result = result.replace("${key}", encode(keyword));
         result = result.replace("{{keyword.raw}}", value(keyword));
         result = result.replace("${keyword.raw}", value(keyword));
+        result = result.replace("{{key.raw}}", value(keyword));
+        result = result.replace("${key.raw}", value(keyword));
         result = result.replace("{{page}}", String.valueOf(page));
         result = result.replace("${page}", String.valueOf(page));
         for (Map.Entry<String, String> entry : source.getVariables().entrySet()) {

@@ -7,10 +7,10 @@
     <path
         android:fillColor="@android:color/transparent"
         android:pathData="M7,8h14a2,2 0,0 1,2 2v8a2,2 0,0 1,-2 2H7a2,2 0,0 1,-2 -2v-8a2,2 0,0 1,2 -2z"
-        android:strokeColor="@color/zy_text_secondary"
+        android:strokeColor="@color/color_main_bottom_bar_text_before"
         android:strokeWidth="1.8"
         android:strokeLineJoin="round" />
     <path
-        android:fillColor="@color/zy_text_secondary"
+        android:fillColor="@color/color_main_bottom_bar_text_before"
         android:pathData="M9,14a1.4,1.4 0,1 0,0.1 0M14,14a1.4,1.4 0,1 0,0.1 0M19,14a1.4,1.4 0,1 0,0.1 0" />
 </vector>

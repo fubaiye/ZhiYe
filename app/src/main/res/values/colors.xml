@@ -24,8 +24,8 @@
 
     <!-- main -->
     <color name="color_main_bottom_bar_bg">@color/zy_surface_glass</color>
-    <color name="color_main_bottom_bar_text">@color/zy_text_secondary</color>
-    <color name="color_main_bottom_bar_text_before">@color/zy_text_secondary</color>
+    <color name="color_main_bottom_bar_text">#5D6472</color>
+    <color name="color_main_bottom_bar_text_before">#5D6472</color>
     <color name="color_main_bottom_bar_text_after">@color/zy_primary</color>
     <color name="color_main_bottom_bar_separator">@color/zy_divider</color>
 

@@ -5,18 +5,26 @@ import android.content.SharedPreferences;
 
 import com.feng.freader.app.App;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SourceRepository {
     private static final String PREF = "book_sources";
     private static final String KEY_JSON = "json";
+    private static final String KEY_BUILTIN_LEGADO_20260518 = "builtin_legado_20260518";
+    private static final String BUILTIN_LEGADO_PATH = "book_sources/legado_2026_05_18.json";
     private static SourceRepository instance;
 
     private final SharedPreferences preferences;
+    private final Context context;
 
     private SourceRepository(Context context) {
-        preferences = context.getApplicationContext().getSharedPreferences(PREF, Context.MODE_PRIVATE);
+        this.context = context.getApplicationContext();
+        preferences = this.context.getSharedPreferences(PREF, Context.MODE_PRIVATE);
     }
 
     public static SourceRepository getInstance() {
@@ -34,6 +42,13 @@ public class SourceRepository {
         if (sources.isEmpty()) {
             sources.addAll(defaultSources());
             save(sources);
+        }
+        if (!preferences.getBoolean(KEY_BUILTIN_LEGADO_20260518, false)) {
+            int count = importBundledLegadoSources(sources);
+            preferences.edit()
+                    .putString(KEY_JSON, BookSourceParser.toJson(sources))
+                    .putBoolean(KEY_BUILTIN_LEGADO_20260518, true)
+                    .apply();
         }
         return sources;
     }
@@ -104,6 +119,34 @@ public class SourceRepository {
             }
         }
         all.add(source);
+    }
+
+    private int importBundledLegadoSources(List<BookSource> all) {
+        String json = readAsset(BUILTIN_LEGADO_PATH);
+        if (json.length() == 0) {
+            return 0;
+        }
+        List<BookSource> incoming = BookSourceParser.parseList(json);
+        for (BookSource source : incoming) {
+            upsert(all, source);
+        }
+        return incoming.size();
+    }
+
+    private String readAsset(String path) {
+        StringBuilder builder = new StringBuilder();
+        try {
+            InputStream inputStream = context.getAssets().open(path);
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(inputStream, Charset.forName("UTF-8")));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                builder.append(line).append('\n');
+            }
+            reader.close();
+        } catch (Throwable ignored) {
+        }
+        return builder.toString();
     }
 
     private List<BookSource> defaultSources() {

@@ -1,6 +1,7 @@
 package com.feng.freader.source;
 
 import com.feng.freader.entity.data.NovelSourceData;
+import com.google.gson.JsonElement;
 
 import org.jsoup.nodes.Element;
 
@@ -9,10 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BookSourceExecutor {
-    private final SourceHttpClient httpClient;
+    private SourceHttpClient httpClient;
 
     public BookSourceExecutor() {
-        this(new SourceHttpClient());
     }
 
     BookSourceExecutor(SourceHttpClient httpClient) {
@@ -22,19 +22,29 @@ public class BookSourceExecutor {
     public List<NovelSourceData> search(BookSource source, String keyword) throws IOException {
         List<NovelSourceData> all = new ArrayList<>();
         for (int page = source.getPagination().getStart(); page <= source.getPagination().getMax(); page++) {
-            String body = httpClient.execute(source, keyword, page);
+            String body = httpClient().execute(source, keyword, page);
             all.addAll(parseSearchPage(source, body));
         }
         return all;
+    }
+
+    private SourceHttpClient httpClient() {
+        if (httpClient == null) {
+            httpClient = new SourceHttpClient();
+        }
+        return httpClient;
     }
 
     public List<NovelSourceData> parseSearchPage(BookSource source, String body) {
         BookSource.SourceRules rules = source.getSearchRules();
         List<NovelSourceData> results = new ArrayList<>();
         if (rules.getList().startsWith("jsonpath:")) {
-            NovelSourceData item = fromBody(source, body, rules);
-            if (!item.getName().isEmpty() && !item.getUrl().isEmpty()) {
-                results.add(item);
+            List<JsonElement> items = RuleEvaluator.selectJsonElements(body, rules.getList());
+            for (JsonElement element : items) {
+                NovelSourceData item = fromJsonElement(source, element, rules);
+                if (!item.getName().isEmpty() && !item.getUrl().isEmpty()) {
+                    results.add(item);
+                }
             }
             return results;
         }
@@ -62,6 +72,18 @@ public class BookSourceExecutor {
                 RuleEvaluator.eval(body, rules.getIntro()),
                 absolute(source, RuleEvaluator.eval(body, rules.getUrl())),
                 absolute(source, RuleEvaluator.eval(body, rules.getCover())));
+        data.setSourceId(source.getId());
+        data.setSourceName(source.getName());
+        return data;
+    }
+
+    private NovelSourceData fromJsonElement(BookSource source, JsonElement element, BookSource.SourceRules rules) {
+        NovelSourceData data = new NovelSourceData(
+                transform(RuleEvaluator.evalJsonElement(element, rules.getName()), rules.getJavaScript()),
+                RuleEvaluator.evalJsonElement(element, rules.getAuthor()),
+                RuleEvaluator.evalJsonElement(element, rules.getIntro()),
+                absolute(source, RuleEvaluator.evalJsonElement(element, rules.getUrl())),
+                absolute(source, RuleEvaluator.evalJsonElement(element, rules.getCover())));
         data.setSourceId(source.getId());
         data.setSourceName(source.getName());
         return data;
