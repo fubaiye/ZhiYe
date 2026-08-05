@@ -85,7 +85,7 @@ public class CategoryNovelAdapter extends RecyclerView.Adapter<CategoryNovelAdap
     }
 
     public static int safeItemCount(List<String> names, List<String> covers) {
-        return Math.min(safeSize(names), safeSize(covers));
+        return safeSize(names);
     }
 
     public static boolean isBlankCover(String coverUrl) {

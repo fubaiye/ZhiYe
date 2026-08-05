@@ -28,6 +28,25 @@ public class DiscoverySourceProviderMergeTest {
         assertEquals("fallback-b", merged.get(1).getNovelNameList().get(0));
     }
 
+    @Test
+    public void fillsFailedRankByIndexFromFallback() {
+        List<List<String>> merged = DiscoverySourceProvider.mergeRanks(
+                Arrays.asList(
+                        Collections.singletonList("online-a"),
+                        Collections.<String>emptyList(),
+                        Collections.singletonList("online-c")),
+                Arrays.asList(
+                        Collections.singletonList("fallback-a"),
+                        Collections.singletonList("fallback-b"),
+                        Collections.singletonList("fallback-c")),
+                3);
+
+        assertEquals(3, merged.size());
+        assertEquals("online-a", merged.get(0).get(0));
+        assertEquals("fallback-b", merged.get(1).get(0));
+        assertEquals("online-c", merged.get(2).get(0));
+    }
+
     private DiscoveryNovelData group(String name, String cover) {
         DiscoveryNovelData data = new DiscoveryNovelData();
         data.setNovelNameList(Collections.singletonList(name));

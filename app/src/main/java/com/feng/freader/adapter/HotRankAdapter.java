@@ -39,43 +39,57 @@ public class HotRankAdapter extends RecyclerView.Adapter<HotRankAdapter.HotRankV
 
     @NonNull
     @Override
-    public HotRankViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        return new HotRankViewHolder(LayoutInflater.from(mContext).inflate(R.layout.item_hot_rank, null));
+    public HotRankViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_hot_rank, parent, false);
+        return new HotRankViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull HotRankViewHolder hotRankViewHolder, int i) {
-        hotRankViewHolder.hotRankName.setText(formatRankTitle(mHotRankNameList.get(i), i));
-        List<String> novelList = mHotRankNovelList.get(i);
-        final String firstName = novelList.size() > 0 ? novelList.get(0) : "";
-        final String secondName = novelList.size() > 1 ? novelList.get(1) : "";
-        final String thirdName = novelList.size() > 2 ? novelList.get(2) : "";
+    public void onBindViewHolder(@NonNull HotRankViewHolder hotRankViewHolder, int position) {
+        hotRankViewHolder.hotRankName.setText(formatRankTitle(safeGet(mHotRankNameList, position), position));
+        List<String> novelList = position < safeSize(mHotRankNovelList)
+                ? mHotRankNovelList.get(position)
+                : null;
+        final String firstName = safeGet(novelList, 0);
+        final String secondName = safeGet(novelList, 1);
+        final String thirdName = safeGet(novelList, 2);
         hotRankViewHolder.firstNovelName.setText(formatRankNovel("\u2460", firstName));
         hotRankViewHolder.firstNovelName.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.clickFirstNovel(firstName);
+                if (mListener != null && firstName.length() > 0) {
+                    mListener.clickFirstNovel(firstName);
+                }
             }
         });
         hotRankViewHolder.secondNovelName.setText(formatRankNovel("\u2461", secondName));
         hotRankViewHolder.secondNovelName.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.clickSecondNovel(secondName);
+                if (mListener != null && secondName.length() > 0) {
+                    mListener.clickSecondNovel(secondName);
+                }
             }
         });
         hotRankViewHolder.thirdNovelName.setText(formatRankNovel("\u2462", thirdName));
         hotRankViewHolder.thirdNovelName.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.clickThirdNovel(thirdName);
+                if (mListener != null && thirdName.length() > 0) {
+                    mListener.clickThirdNovel(thirdName);
+                }
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return mHotRankNameList.size();
+        return safeItemCount(mHotRankNameList, mHotRankNovelList);
+    }
+
+    public static int safeItemCount(List<String> rankNames, List<List<String>> rankNovels) {
+        return Math.min(safeSize(rankNames), safeSize(rankNovels));
     }
 
     private String formatRankTitle(String name, int position) {
@@ -88,6 +102,14 @@ public class HotRankAdapter extends RecyclerView.Adapter<HotRankAdapter.HotRankV
             return rank;
         }
         return rank + "  " + name;
+    }
+
+    private static String safeGet(List<String> list, int index) {
+        return index >= 0 && index < safeSize(list) ? list.get(index) : "";
+    }
+
+    private static int safeSize(List<?> list) {
+        return list == null ? 0 : list.size();
     }
 
     class HotRankViewHolder extends RecyclerView.ViewHolder {

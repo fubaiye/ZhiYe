@@ -9,7 +9,9 @@ import com.feng.freader.source.AggregatedSearchEngine;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DiscoverySourceProvider {
     private static final int FULL_SOURCE_LIMIT = Integer.MAX_VALUE;
@@ -28,12 +30,11 @@ public class DiscoverySourceProvider {
             @Override
             public void run() {
                 List<List<String>> ranks = new ArrayList<>();
-                for (String keyword : keywords) {
+                for (int i = 0; i < size(keywords); i++) {
+                    String keyword = keywords.get(i);
                     List<String> names = names(searchEngine.search(keyword, FULL_SOURCE_LIMIT,
                             DISCOVERY_TIMEOUT_SECONDS), 3);
-                    if (!names.isEmpty()) {
-                        ranks.add(names);
-                    }
+                    ranks.add(mergeRank(names, fallback, i));
                 }
                 if (!ranks.isEmpty()) {
                     post(callback, ranks);
@@ -49,15 +50,18 @@ public class DiscoverySourceProvider {
             @Override
             public void run() {
                 List<DiscoveryNovelData> groups = new ArrayList<>();
-                for (String keyword : keywords) {
+                for (int i = 0; i < size(keywords); i++) {
+                    String keyword = keywords.get(i);
                     DiscoveryNovelData group = group(searchEngine.search(keyword, FULL_SOURCE_LIMIT,
                             DISCOVERY_TIMEOUT_SECONDS), 6);
                     if (!group.getNovelNameList().isEmpty()) {
-                        groups.add(group);
+                        groups.add(fillMissingCovers(group, i < size(fallback) ? fallback.get(i) : null));
+                    } else if (i < size(fallback)) {
+                        groups.add(fallback.get(i));
                     }
                 }
                 if (!groups.isEmpty()) {
-                    post(callback, mergeCategories(groups, fallback));
+                    post(callback, groups);
                 }
             }
         }).start();
@@ -87,11 +91,24 @@ public class DiscoverySourceProvider {
         DiscoveryNovelData data = new DiscoveryNovelData();
         List<String> names = new ArrayList<>();
         List<String> covers = new ArrayList<>();
-        int limit = Math.min(count, results.size());
-        for (int i = 0; i < limit; i++) {
+        Set<String> usedBooks = new HashSet<>();
+        Set<String> usedCovers = new HashSet<>();
+        for (int i = 0; i < size(results) && names.size() < count; i++) {
             NovelSourceData item = results.get(i);
-            names.add(item.getName());
-            covers.add(item.getCover());
+            if (item == null || isBlank(item.getName())) {
+                continue;
+            }
+            String name = item.getName().trim();
+            String bookKey = name + "|" + safe(item.getAuthor()).trim();
+            if (!usedBooks.add(bookKey)) {
+                continue;
+            }
+            String cover = safe(item.getCover()).trim();
+            if (!cover.isEmpty() && !usedCovers.add(cover)) {
+                cover = "";
+            }
+            names.add(name);
+            covers.add(cover);
         }
         data.setNovelNameList(names);
         data.setCoverUrlList(covers);
@@ -100,9 +117,11 @@ public class DiscoverySourceProvider {
 
     private List<String> names(List<NovelSourceData> results, int count) {
         List<String> names = new ArrayList<>();
-        int limit = Math.min(count, results.size());
-        for (int i = 0; i < limit; i++) {
-            names.add(results.get(i).getName());
+        for (int i = 0; i < size(results) && names.size() < count; i++) {
+            NovelSourceData item = results.get(i);
+            if (item != null && !isBlank(item.getName())) {
+                names.add(item.getName().trim());
+            }
         }
         return names;
     }
@@ -114,6 +133,29 @@ public class DiscoverySourceProvider {
                 callback.onResult(data);
             }
         });
+    }
+
+    public static List<List<String>> mergeRanks(List<List<String>> online,
+                                                List<List<String>> fallback,
+                                                int count) {
+        List<List<String>> merged = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            List<String> onlineGroup = i < size(online) ? online.get(i) : null;
+            merged.add(mergeRank(onlineGroup, fallback, i));
+        }
+        return merged;
+    }
+
+    private static List<String> mergeRank(List<String> onlineGroup,
+                                          List<List<String>> fallback,
+                                          int index) {
+        if (onlineGroup != null && !onlineGroup.isEmpty()) {
+            return new ArrayList<>(onlineGroup);
+        }
+        if (index >= 0 && index < size(fallback) && fallback.get(index) != null) {
+            return new ArrayList<>(fallback.get(index));
+        }
+        return new ArrayList<>();
     }
 
     public static List<DiscoveryNovelData> mergeCategories(
@@ -161,5 +203,13 @@ public class DiscoverySourceProvider {
 
     private static int size(List<?> list) {
         return list == null ? 0 : list.size();
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().length() == 0;
+    }
+
+    private static String safe(String value) {
+        return value == null ? "" : value;
     }
 }

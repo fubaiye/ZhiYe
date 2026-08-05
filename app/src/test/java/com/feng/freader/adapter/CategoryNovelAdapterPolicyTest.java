@@ -12,8 +12,8 @@ import static org.junit.Assert.assertTrue;
 public class CategoryNovelAdapterPolicyTest {
 
     @Test
-    public void itemCountUsesSafeMinimumOfNamesAndCovers() {
-        assertEquals(1, CategoryNovelAdapter.safeItemCount(
+    public void itemCountUsesNamesEvenWhenCoversAreShorter() {
+        assertEquals(2, CategoryNovelAdapter.safeItemCount(
                 Arrays.asList("a", "b"), Collections.singletonList("cover")));
     }
 

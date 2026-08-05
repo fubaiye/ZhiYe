@@ -16,7 +16,9 @@ public class SourceRepository {
     private static final String PREF = "book_sources";
     private static final String KEY_JSON = "json";
     private static final String KEY_BUILTIN_LEGADO_20260518 = "builtin_legado_20260518";
+    private static final String KEY_BUILTIN_LEGADO_LATEST_ALL = "builtin_legado_latest_all";
     private static final String BUILTIN_LEGADO_PATH = "book_sources/legado_2026_05_18.json";
+    private static final String BUILTIN_LEGADO_LATEST_ALL_PATH = "book_sources/legado_latest_all.json";
     private static SourceRepository instance;
 
     private final SharedPreferences preferences;
@@ -44,10 +46,17 @@ public class SourceRepository {
             save(sources);
         }
         if (!preferences.getBoolean(KEY_BUILTIN_LEGADO_20260518, false)) {
-            int count = importBundledLegadoSources(sources);
+            importBundledLegadoSources(sources, BUILTIN_LEGADO_PATH);
             preferences.edit()
                     .putString(KEY_JSON, BookSourceParser.toJson(sources))
                     .putBoolean(KEY_BUILTIN_LEGADO_20260518, true)
+                    .apply();
+        }
+        if (!preferences.getBoolean(KEY_BUILTIN_LEGADO_LATEST_ALL, false)) {
+            importBundledLegadoSources(sources, BUILTIN_LEGADO_LATEST_ALL_PATH);
+            preferences.edit()
+                    .putString(KEY_JSON, BookSourceParser.toJson(sources))
+                    .putBoolean(KEY_BUILTIN_LEGADO_LATEST_ALL, true)
                     .apply();
         }
         return sources;
@@ -142,8 +151,8 @@ public class SourceRepository {
         all.add(source);
     }
 
-    private int importBundledLegadoSources(List<BookSource> all) {
-        String json = readAsset(BUILTIN_LEGADO_PATH);
+    private int importBundledLegadoSources(List<BookSource> all, String path) {
+        String json = readAsset(path);
         if (json.length() == 0) {
             return 0;
         }

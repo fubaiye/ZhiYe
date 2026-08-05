@@ -44,21 +44,28 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
 
     @NonNull
     @Override
-    public CategoryViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        return new CategoryViewHolder(LayoutInflater.from(mContext).inflate(R.layout.item_category, null));
+    public CategoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_category, parent, false);
+        return new CategoryViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CategoryViewHolder categoryViewHolder, final int i) {
-        categoryViewHolder.categoryName.setText(mCategoryNameList.get(i));
-        categoryViewHolder.moreTv.setText(mMoreList.get(i));
+    public void onBindViewHolder(@NonNull CategoryViewHolder categoryViewHolder, final int position) {
+        categoryViewHolder.categoryName.setText(safeGet(mCategoryNameList, position));
+        categoryViewHolder.moreTv.setText(safeGet(mMoreList, position));
         categoryViewHolder.novelList.setLayoutManager(new GridLayoutManager(mContext, 3));
+        DiscoveryNovelData data = position < safeSize(mNovelDataList)
+                ? mNovelDataList.get(position)
+                : new DiscoveryNovelData();
         CategoryNovelAdapter adapter = new CategoryNovelAdapter(mContext,
-                mNovelDataList.get(i).getCoverUrlList(), mNovelDataList.get(i).getNovelNameList());
+                data.getCoverUrlList(), data.getNovelNameList());
         adapter.setOnCategoryNovelListener(new CategoryNovelAdapter.CategoryNovelListener() {
             @Override
             public void clickItem(String novelName) {
-                mListener.clickNovel(novelName);
+                if (mListener != null && novelName != null && novelName.length() > 0) {
+                    mListener.clickNovel(novelName);
+                }
             }
         });
         categoryViewHolder.novelList.setAdapter(adapter);
@@ -66,20 +73,33 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         categoryViewHolder.moreTv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.clickMore(i);
+                if (mListener != null) {
+                    mListener.clickMore(position);
+                }
             }
         });
         categoryViewHolder.moreIv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.clickMore(i);
+                if (mListener != null) {
+                    mListener.clickMore(position);
+                }
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return mCategoryNameList.size();
+        return Math.min(Math.min(safeSize(mCategoryNameList), safeSize(mMoreList)),
+                safeSize(mNovelDataList));
+    }
+
+    private static String safeGet(List<String> list, int index) {
+        return index >= 0 && index < safeSize(list) ? list.get(index) : "";
+    }
+
+    private static int safeSize(List<?> list) {
+        return list == null ? 0 : list.size();
     }
 
     class CategoryViewHolder extends RecyclerView.ViewHolder {
