@@ -40,6 +40,7 @@ import com.feng.freader.entity.eventbus.HoldReadActivityEvent;
 import com.feng.freader.http.UrlObtainer;
 import com.feng.freader.presenter.ReadPresenter;
 import com.feng.freader.reader.EpubChapterFallbackPolicy;
+import com.feng.freader.reader.ReaderCurlColorPolicy;
 import com.feng.freader.reader.ReaderChapterTitleFormatter;
 import com.feng.freader.reader.ReaderDisplayPolicy;
 import com.feng.freader.reader.ReaderProfileManager;
@@ -1309,10 +1310,9 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         mNovelTitleTv.setTextColor(getResources().getColor(R.color.read_night_mode_title));
         mNovelProgressTv.setTextColor(getResources().getColor(R.color.read_night_mode_title));
         mStateTv.setTextColor(getResources().getColor(R.color.read_night_mode_text));
-        mPageView.setBgColor(getResources().getColor(R.color.read_night_mode_bg));
-        mPageView.setTextColor(getResources().getColor(R.color.read_night_mode_text));
-        mPageView.setBackBgColor(getResources().getColor(R.color.read_night_mode_back_bg));
-        mPageView.setBackTextColor(getResources().getColor(R.color.read_night_mode_back_text));
+        applyReaderPageColors(
+                getResources().getColor(R.color.read_night_mode_bg),
+                getResources().getColor(R.color.read_night_mode_text));
         mPageView.post(new Runnable() {
             @Override
             public void run() {
@@ -1355,58 +1355,50 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         mTheme4.setSelected(false);
         int bgColor = getResources().getColor(R.color.read_theme_0_bg);
         int textColor = getResources().getColor(R.color.read_theme_0_text);
-        int backBgColor = getResources().getColor(R.color.read_theme_0_back_bg);
-        int backTextColor = getResources().getColor(R.color.read_theme_0_back_text);
         switch (mTheme) {
             case 0:
                 mTheme0.setSelected(true);
                 bgColor = getResources().getColor(R.color.read_theme_0_bg);
                 textColor = getResources().getColor(R.color.read_theme_0_text);
-                backBgColor = getResources().getColor(R.color.read_theme_0_back_bg);
-                backTextColor = getResources().getColor(R.color.read_theme_0_back_text);
                 break;
             case 1:
                 mTheme1.setSelected(true);
                 bgColor = getResources().getColor(R.color.read_theme_1_bg);
                 textColor = getResources().getColor(R.color.read_theme_1_text);
-                backBgColor = getResources().getColor(R.color.read_theme_1_back_bg);
-                backTextColor = getResources().getColor(R.color.read_theme_1_back_text);
                 break;
             case 2:
                 mTheme2.setSelected(true);
                 bgColor = getResources().getColor(R.color.read_theme_2_bg);
                 textColor = getResources().getColor(R.color.read_theme_2_text);
-                backBgColor = getResources().getColor(R.color.read_theme_2_back_bg);
-                backTextColor = getResources().getColor(R.color.read_theme_2_back_text);
                 break;
             case 3:
                 mTheme3.setSelected(true);
                 bgColor = getResources().getColor(R.color.read_theme_3_bg);
                 textColor = getResources().getColor(R.color.read_theme_3_text);
-                backBgColor = getResources().getColor(R.color.read_theme_3_back_bg);
-                backTextColor = getResources().getColor(R.color.read_theme_3_back_text);
                 break;
             case 4:
                 mTheme4.setSelected(true);
                 bgColor = getResources().getColor(R.color.read_theme_4_bg);
                 textColor = getResources().getColor(R.color.read_theme_4_text);
-                backBgColor = getResources().getColor(R.color.read_theme_4_back_bg);
-                backTextColor = getResources().getColor(R.color.read_theme_4_back_text);
                 break;
         }
         // 设置相关颜色
         mNovelTitleTv.setTextColor(textColor);
         mNovelProgressTv.setTextColor(textColor);
         mStateTv.setTextColor(textColor);
-        mPageView.setTextColor(textColor);
-        mPageView.setBgColor(bgColor);
-        mPageView.setBackTextColor(backTextColor);
-        mPageView.setBackBgColor(backBgColor);
+        applyReaderPageColors(bgColor, textColor);
         mPageView.updateBitmap();
         if (PageView.IS_TEST) {
             mPageView.setBackgroundColor(bgColor);
             mPageView.invalidate();
         }
+    }
+
+    private void applyReaderPageColors(int bgColor, int textColor) {
+        mPageView.setTextColor(textColor);
+        mPageView.setBgColor(bgColor);
+        mPageView.setBackTextColor(ReaderCurlColorPolicy.backTextFor(textColor));
+        mPageView.setBackBgColor(ReaderCurlColorPolicy.backBackgroundFor(bgColor));
     }
 
     /**

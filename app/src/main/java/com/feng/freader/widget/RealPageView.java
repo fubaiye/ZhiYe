@@ -92,6 +92,7 @@ public class RealPageView extends PageView{
 
     private boolean mIsLoadNextPage = true;   // 是否翻到下一页
     private int mLastX = 0;
+    private boolean mIsAnimating = false;
 
     public RealPageView(Context context) {
         super(context);
@@ -422,6 +423,9 @@ public class RealPageView extends PageView{
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (mIsAnimating) {
+            return true;
+        }
         if (mTurnType == TURN_TYPE.NORMAL) {
             onNormalTouchEvent(event);
         } else if (mTurnType == TURN_TYPE.REAL) {
@@ -559,6 +563,9 @@ public class RealPageView extends PageView{
      * 翻页动画
      */
     private void startTurnAnim(){
+        if (mIsAnimating) {
+            return;
+        }
         ValueAnimator va = null;
         switch (mCurrStyle) {
             case TOP_RIGHT:
@@ -571,6 +578,10 @@ public class RealPageView extends PageView{
                         new PointF(a.x, a.y), new PointF(- (float) viewWidth/2, viewHeight));
                 break;
         }
+        if (va == null) {
+            return;
+        }
+        mIsAnimating = true;
         va.setDuration(300);
         va.setInterpolator(new AccelerateDecelerateInterpolator());
         va.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -595,6 +606,7 @@ public class RealPageView extends PageView{
                 mPageIndex++;
                 a.x = -1;
                 a.y = -1;
+                mIsAnimating = false;
                 updateBitmap();
             }
         });
@@ -605,11 +617,15 @@ public class RealPageView extends PageView{
      * 翻页动画（翻到上一页）
      */
     private void startLastAnim() {
+        if (mIsAnimating) {
+            return;
+        }
         // 得到上一页的位置
         if (!pre()) {
             return;
         }
         // 进行动画
+        mIsAnimating = true;
         ValueAnimator va = ValueAnimator.ofFloat((float) viewWidth/5, viewWidth-1);
         va.setDuration(300);
         va.setInterpolator(new LinearInterpolator());
@@ -620,6 +636,15 @@ public class RealPageView extends PageView{
                 updateLast(curr);
             }
         });
+        va.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                a.x = -1;
+                a.y = -1;
+                mIsAnimating = false;
+                updateBitmap();
+            }
+        });
         va.start();
     }
 
@@ -627,6 +652,9 @@ public class RealPageView extends PageView{
      * 取消翻页
      */
     private void startCancelAnim() {
+        if (mIsAnimating) {
+            return;
+        }
         ValueAnimator va = null;
         switch (mCurrStyle) {
             case TOP_RIGHT:
@@ -639,6 +667,10 @@ public class RealPageView extends PageView{
                         new PointF(a.x, a.y), new PointF(viewWidth, viewHeight));
                 break;
         }
+        if (va == null) {
+            return;
+        }
+        mIsAnimating = true;
         va.setDuration(300);
         va.setInterpolator(new LinearInterpolator());
         va.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -652,6 +684,12 @@ public class RealPageView extends PageView{
             @Override
             public void onAnimationEnd(Animator animation) {
                 setDefaultPath();//重置默认界面
+            }
+        });
+        va.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mIsAnimating = false;
             }
         });
         va.start();
@@ -710,6 +748,37 @@ public class RealPageView extends PageView{
     /**
      * 设置触摸点并更新视图
      */
+    @Override
+    public boolean turnToNextPage() {
+        if (mTurnType == TURN_TYPE.NORMAL) {
+            return next();
+        }
+        if (!checkBeforeDraw() || mIsAnimating) {
+            return false;
+        }
+        if (!mHasBitmapB) {
+            mListener.next();
+            return false;
+        }
+        mCurrStyle = STYLE.CENTER_RIGHT;
+        setTouchPoint(viewWidth - 1, viewHeight - 1);
+        startTurnAnim();
+        return true;
+    }
+
+    @Override
+    public boolean turnToPreviousPage() {
+        if (mTurnType == TURN_TYPE.NORMAL) {
+            return pre();
+        }
+        if (!checkBeforeDraw() || mIsAnimating) {
+            return false;
+        }
+        mCurrStyle = STYLE.LEFT;
+        startLastAnim();
+        return true;
+    }
+
     public void setTouchPoint(float x, float y){
         a.x = x;
         a.y = y;
