@@ -1,5 +1,7 @@
 package com.feng.freader.util;
 
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -30,6 +32,8 @@ public class UpdateInstaller {
     private static final int READ_TIMEOUT_MS = 120000;
     private static final int MAX_REDIRECTS = 8;
     private static final int MAX_RETRY_COUNT = 3;
+    private static final long PROGRESS_NOTIFY_BYTES = 512L * 1024L;
+    private static final long PROGRESS_NOTIFY_INTERVAL_MS = 800L;
 
     private UpdateInstaller() {
     }
@@ -62,40 +66,52 @@ public class UpdateInstaller {
         final File tempFile = new File(updateDir, TEMP_UPDATE_FILE_NAME);
         final String apkUrl = updateInfo.getApkUrl();
         final long expectedSize = updateInfo.getApkSize();
-        showToast(appContext, "正在下载更新包", Toast.LENGTH_SHORT);
+        final DownloadProgressReporter progressReporter =
+                new DownloadProgressReporter(context, expectedSize);
+        progressReporter.show();
 
         new Thread(new Runnable() {
             @Override
             public void run() {
                 if (!deleteIfExists(apkFile) || !deleteIfExists(tempFile)) {
+                    progressReporter.dismiss();
                     postToast(appContext, "无法清理旧更新包");
                     return;
                 }
                 try {
-                    downloadWithRetry(apkUrl, tempFile);
+                    downloadWithRetry(apkUrl, tempFile, expectedSize, progressReporter);
+                    progressReporter.update(tempFile.length(), expectedSize, true);
                     if (!tempFile.renameTo(apkFile)) {
                         throw new IOException("Unable to move update apk");
                     }
                     if (!ApkFileValidator.isValidApk(apkFile, expectedSize)) {
                         deleteIfExists(apkFile);
+                        progressReporter.dismiss();
                         postToast(appContext, "更新包校验失败，请稍后重试");
                         return;
                     }
+                    progressReporter.dismiss();
                     postOpenInstaller(appContext, apkFile);
                 } catch (Throwable throwable) {
                     deleteIfExists(apkFile);
                     deleteIfExists(tempFile);
+                    progressReporter.dismiss();
                     postToast(appContext, "更新包下载失败，请切换网络后重试");
                 }
             }
         }).start();
     }
 
-    private static void downloadWithRetry(String apkUrl, File tempFile) throws IOException {
+    private static void downloadWithRetry(String apkUrl, File tempFile, long expectedSize,
+                                          DownloadProgressReporter progressReporter)
+            throws IOException {
         IOException lastException = null;
         for (int i = 0; i < MAX_RETRY_COUNT; i++) {
             try {
-                download(apkUrl, tempFile);
+                if (i > 0) {
+                    progressReporter.setMessage("正在重试下载更新包（第 " + (i + 1) + " 次）");
+                }
+                download(apkUrl, tempFile, expectedSize, progressReporter);
                 return;
             } catch (IOException e) {
                 lastException = e;
@@ -106,19 +122,36 @@ public class UpdateInstaller {
         throw lastException == null ? new IOException("Download failed") : lastException;
     }
 
-    private static void download(String apkUrl, File apkFile) throws IOException {
+    private static void download(String apkUrl, File apkFile, long expectedSize,
+                                 DownloadProgressReporter progressReporter)
+            throws IOException {
         HttpURLConnection connection = openConnection(apkUrl, 0);
         InputStream inputStream = null;
         OutputStream outputStream = null;
         try {
+            long contentLength = contentLength(connection);
+            long totalBytes = contentLength > 0 ? contentLength : expectedSize;
             inputStream = new BufferedInputStream(connection.getInputStream());
             outputStream = new FileOutputStream(apkFile);
             byte[] buffer = new byte[32 * 1024];
             int count;
+            long downloadedBytes = 0L;
+            long lastNotifiedBytes = 0L;
+            long lastNotifiedAt = 0L;
+            progressReporter.update(0L, totalBytes, true);
             while ((count = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, count);
+                downloadedBytes += count;
+                long now = System.currentTimeMillis();
+                if (downloadedBytes - lastNotifiedBytes >= PROGRESS_NOTIFY_BYTES
+                        || now - lastNotifiedAt >= PROGRESS_NOTIFY_INTERVAL_MS) {
+                    progressReporter.update(downloadedBytes, totalBytes, false);
+                    lastNotifiedBytes = downloadedBytes;
+                    lastNotifiedAt = now;
+                }
             }
             outputStream.flush();
+            progressReporter.update(downloadedBytes, totalBytes, true);
         } finally {
             if (inputStream != null) {
                 inputStream.close();
@@ -159,6 +192,21 @@ public class UpdateInstaller {
             throw new IOException("Unexpected http status " + code);
         }
         return connection;
+    }
+
+    private static long contentLength(HttpURLConnection connection) {
+        if (connection == null) {
+            return -1L;
+        }
+        String value = connection.getHeaderField("Content-Length");
+        if (value == null || value.trim().length() == 0) {
+            return -1L;
+        }
+        try {
+            return Long.parseLong(value.trim());
+        } catch (Throwable ignored) {
+            return -1L;
+        }
     }
 
     private static boolean deleteIfExists(File file) {
@@ -206,5 +254,91 @@ public class UpdateInstaller {
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
+    }
+
+    private static class DownloadProgressReporter {
+        private final Handler handler = new Handler(Looper.getMainLooper());
+        private final Context appContext;
+        private final Activity activity;
+        private final long expectedSize;
+        private ProgressDialog dialog;
+
+        DownloadProgressReporter(Context context, long expectedSize) {
+            this.appContext = context.getApplicationContext();
+            this.activity = context instanceof Activity ? (Activity) context : null;
+            this.expectedSize = expectedSize;
+        }
+
+        void show() {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (activity == null || activity.isFinishing()) {
+                        showToast(appContext, "正在下载更新包："
+                                + UpdateDownloadProgressFormatter.format(0L, expectedSize),
+                                Toast.LENGTH_LONG);
+                        return;
+                    }
+                    dialog = new ProgressDialog(activity);
+                    dialog.setTitle("正在下载更新包");
+                    dialog.setMessage(UpdateDownloadProgressFormatter.format(0L, expectedSize));
+                    dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                    dialog.setIndeterminate(expectedSize <= 0L);
+                    dialog.setCancelable(false);
+                    if (expectedSize > 0L) {
+                        dialog.setMax(100);
+                        dialog.setProgress(0);
+                    }
+                    dialog.show();
+                }
+            });
+        }
+
+        void setMessage(final String message) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (dialog != null && dialog.isShowing()) {
+                        dialog.setMessage(message);
+                    } else {
+                        showToast(appContext, message, Toast.LENGTH_SHORT);
+                    }
+                }
+            });
+        }
+
+        void update(final long downloadedBytes, final long totalBytes, final boolean forceToast) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    String message = UpdateDownloadProgressFormatter.format(downloadedBytes, totalBytes);
+                    if (dialog != null && dialog.isShowing()) {
+                        dialog.setMessage(message);
+                        if (totalBytes > 0L) {
+                            dialog.setIndeterminate(false);
+                            dialog.setMax(100);
+                            dialog.setProgress((int) Math.min(100L,
+                                    downloadedBytes * 100L / totalBytes));
+                        } else {
+                            dialog.setIndeterminate(true);
+                        }
+                    } else if (forceToast) {
+                        showToast(appContext, "正在下载更新包：" + message, Toast.LENGTH_LONG);
+                    }
+                }
+            });
+        }
+
+        void dismiss() {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (dialog != null && dialog.isShowing()) {
+                        dialog.dismiss();
+                    }
+                    dialog = null;
+                }
+            });
+        }
     }
 }
