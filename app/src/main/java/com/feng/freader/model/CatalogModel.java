@@ -103,7 +103,20 @@ public class CatalogModel implements ICatalogContract.Model {
                     }
                     postSourceCatalogSuccess(data);
                 } catch (Throwable t) {
-                    postSourceCatalogError(t.getMessage());
+                    String sourceId = SourceBookLink.sourceId(url);
+                    String detailUrl = SourceBookLink.originalUrl(url);
+                    Log.e("CatalogModel",
+                            "加载书源目录失败"
+                                    + "\nsourceId=" + sourceId
+                                    + "\nbookUrl=" + url
+                                    + "\ndetailUrl=" + detailUrl
+                                    + "\nexception=" + t.getClass().getSimpleName(),
+                            t);
+                    String message = t.getClass().getSimpleName();
+                    if (t.getMessage() != null && t.getMessage().trim().length() > 0) {
+                        message += "：" + t.getMessage();
+                    }
+                    postSourceCatalogError(message);
                 }
             }
         }).start();

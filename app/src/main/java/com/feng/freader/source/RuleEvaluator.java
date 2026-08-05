@@ -10,6 +10,7 @@ import org.jsoup.helper.W3CDom;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -91,6 +92,23 @@ public class RuleEvaluator {
                 : (value.isJsonPrimitive() ? value.getAsString() : value.toString());
     }
 
+    public static List<XPathItem> selectXPathItems(String body, String rule) {
+        List<XPathItem> items = new ArrayList<>();
+        try {
+            org.w3c.dom.Document document = parseXPathDocument(body);
+            NodeList nodes = (NodeList) XPathFactory.newInstance().newXPath()
+                    .evaluate(stripPrefix(rule, "xpath:"), document, XPathConstants.NODESET);
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node node = nodes.item(i);
+                if (node != null) {
+                    items.add(new XPathItem(node));
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return items;
+    }
+
     public static String eval(String body, String rule) {
         if (rule == null || rule.length() == 0) {
             return "";
@@ -139,14 +157,7 @@ public class RuleEvaluator {
 
     private static String evalXPath(String html, String xpath) {
         try {
-            org.w3c.dom.Document document;
-            try {
-                document = new W3CDom().fromJsoup(Jsoup.parse(html == null ? "" : html));
-            } catch (Throwable ignored) {
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                factory.setNamespaceAware(false);
-                document = factory.newDocumentBuilder().parse(new InputSource(new StringReader(html)));
-            }
+            org.w3c.dom.Document document = parseXPathDocument(html);
             Object result = XPathFactory.newInstance().newXPath()
                     .evaluate(xpath, document, XPathConstants.NODESET);
             NodeList nodes = (NodeList) result;
@@ -158,6 +169,16 @@ public class RuleEvaluator {
             return node == null ? "" : node.getTextContent().trim();
         } catch (Throwable ignored) {
             return "";
+        }
+    }
+
+    private static org.w3c.dom.Document parseXPathDocument(String html) throws Exception {
+        try {
+            return new W3CDom().fromJsoup(Jsoup.parse(html == null ? "" : html));
+        } catch (Throwable ignored) {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setNamespaceAware(false);
+            return factory.newDocumentBuilder().parse(new InputSource(new StringReader(html)));
         }
     }
 
@@ -298,5 +319,53 @@ public class RuleEvaluator {
 
     private static String stripPrefix(String value, String prefix) {
         return value != null && value.startsWith(prefix) ? value.substring(prefix.length()) : value;
+    }
+
+    public static class XPathItem {
+        private final Node node;
+
+        XPathItem(Node node) {
+            this.node = node;
+        }
+
+        public String eval(String rule) {
+            if (rule == null || rule.trim().length() == 0) {
+                return text(node);
+            }
+            String body = stripPrefix(rule.trim(), "xpath:");
+            if (body.startsWith("@")) {
+                return attr(node, body.substring(1));
+            }
+            try {
+                Object result = XPathFactory.newInstance().newXPath()
+                        .evaluate(body, node, XPathConstants.NODESET);
+                NodeList nodes = (NodeList) result;
+                if (nodes.getLength() > 0) {
+                    return text(nodes.item(0));
+                }
+                String text = XPathFactory.newInstance().newXPath().evaluate(body, node);
+                return text == null ? "" : text.trim();
+            } catch (Throwable ignored) {
+                return "";
+            }
+        }
+
+        private static String text(Node node) {
+            return node == null || node.getTextContent() == null
+                    ? ""
+                    : node.getTextContent().trim();
+        }
+
+        private static String attr(Node node, String name) {
+            if (node == null || name == null || name.length() == 0) {
+                return "";
+            }
+            NamedNodeMap attributes = node.getAttributes();
+            if (attributes == null) {
+                return "";
+            }
+            Node attr = attributes.getNamedItem(name);
+            return text(attr);
+        }
     }
 }

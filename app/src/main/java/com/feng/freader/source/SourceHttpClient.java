@@ -15,16 +15,33 @@ public class SourceHttpClient {
             MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");
     private OkHttpClient client;
 
+    public SourceHttpClient() {
+    }
+
+    SourceHttpClient(OkHttpClient client) {
+        this.client = client;
+    }
+
     public String execute(BookSource source, String keyword, int page) throws IOException {
         String url = SourceTemplate.render(source.getSearchUrl(), source, keyword, page);
-        return execute(source, url, keyword, page);
+        Request.Builder builder = createRequestBuilder(source, url, keyword, page);
+        if ("POST".equalsIgnoreCase(source.getSearchMethod())) {
+            String body = SourceTemplate.render(source.getSearchBody(), source, keyword, page);
+            builder.post(RequestBody.create(FORM_TYPE, body));
+        } else {
+            builder.get();
+        }
+        return executeRequest(builder.build());
     }
 
     public String executeUrl(BookSource source, String url) throws IOException {
-        return execute(source, url, "", 1);
+        Request.Builder builder = createRequestBuilder(source, url, "", 1);
+        builder.get();
+        return executeRequest(builder.build());
     }
 
-    private String execute(BookSource source, String url, String keyword, int page) throws IOException {
+    private Request.Builder createRequestBuilder(BookSource source, String url,
+                                                 String keyword, int page) {
         Request.Builder builder = new Request.Builder().url(url);
         for (Map.Entry<String, String> entry : source.getHeaders().entrySet()) {
             builder.header(entry.getKey(), SourceTemplate.render(entry.getValue(), source, keyword, page));
@@ -32,16 +49,16 @@ public class SourceHttpClient {
         if (!source.getCookies().isEmpty()) {
             builder.header("Cookie", cookieHeader(source, keyword, page));
         }
-        if ("POST".equalsIgnoreCase(source.getSearchMethod())) {
-            String body = SourceTemplate.render(source.getSearchBody(), source, keyword, page);
-            builder.post(RequestBody.create(FORM_TYPE, body));
-        } else {
-            builder.get();
-        }
-        Response response = client().newCall(builder.build()).execute();
+        return builder;
+    }
+
+    private String executeRequest(Request request) throws IOException {
+        Response response = client().newCall(request).execute();
         try {
             if (!response.isSuccessful()) {
-                throw new IOException("HTTP " + response.code());
+                throw new IOException("HTTP " + response.code()
+                        + ", Method=" + request.method()
+                        + ", URL=" + request.url());
             }
             return response.body() == null ? "" : response.body().string();
         } finally {

@@ -31,11 +31,9 @@ public class DiscoverySourceProvider {
                 for (String keyword : keywords) {
                     List<String> names = names(searchEngine.search(keyword, FULL_SOURCE_LIMIT,
                             DISCOVERY_TIMEOUT_SECONDS), 3);
-                    if (names.isEmpty()) {
-                        ranks.clear();
-                        break;
+                    if (!names.isEmpty()) {
+                        ranks.add(names);
                     }
-                    ranks.add(names);
                 }
                 if (!ranks.isEmpty()) {
                     post(callback, ranks);
@@ -54,14 +52,12 @@ public class DiscoverySourceProvider {
                 for (String keyword : keywords) {
                     DiscoveryNovelData group = group(searchEngine.search(keyword, FULL_SOURCE_LIMIT,
                             DISCOVERY_TIMEOUT_SECONDS), 6);
-                    if (group.getNovelNameList().isEmpty()) {
-                        groups.clear();
-                        break;
+                    if (!group.getNovelNameList().isEmpty()) {
+                        groups.add(group);
                     }
-                    groups.add(group);
                 }
                 if (!groups.isEmpty()) {
-                    post(callback, groups);
+                    post(callback, mergeCategories(groups, fallback));
                 }
             }
         }).start();
@@ -118,5 +114,52 @@ public class DiscoverySourceProvider {
                 callback.onResult(data);
             }
         });
+    }
+
+    public static List<DiscoveryNovelData> mergeCategories(
+            List<DiscoveryNovelData> online,
+            List<DiscoveryNovelData> fallback) {
+        List<DiscoveryNovelData> merged = new ArrayList<>();
+        int count = Math.max(size(online), size(fallback));
+        for (int i = 0; i < count; i++) {
+            DiscoveryNovelData onlineGroup = i < size(online) ? online.get(i) : null;
+            DiscoveryNovelData fallbackGroup = i < size(fallback) ? fallback.get(i) : null;
+            if (hasNames(onlineGroup)) {
+                merged.add(fillMissingCovers(onlineGroup, fallbackGroup));
+            } else if (fallbackGroup != null) {
+                merged.add(fallbackGroup);
+            }
+        }
+        return merged;
+    }
+
+    private static DiscoveryNovelData fillMissingCovers(
+            DiscoveryNovelData onlineGroup,
+            DiscoveryNovelData fallbackGroup) {
+        List<String> names = onlineGroup.getNovelNameList();
+        List<String> covers = new ArrayList<>();
+        List<String> onlineCovers = onlineGroup.getCoverUrlList();
+        List<String> fallbackCovers = fallbackGroup == null
+                ? new ArrayList<String>()
+                : fallbackGroup.getCoverUrlList();
+        for (int i = 0; i < names.size(); i++) {
+            String cover = i < size(onlineCovers) ? onlineCovers.get(i) : "";
+            if ((cover == null || cover.trim().length() == 0) && i < size(fallbackCovers)) {
+                cover = fallbackCovers.get(i);
+            }
+            covers.add(cover == null ? "" : cover);
+        }
+        DiscoveryNovelData data = new DiscoveryNovelData();
+        data.setNovelNameList(new ArrayList<>(names));
+        data.setCoverUrlList(covers);
+        return data;
+    }
+
+    private static boolean hasNames(DiscoveryNovelData data) {
+        return data != null && data.getNovelNameList() != null && !data.getNovelNameList().isEmpty();
+    }
+
+    private static int size(List<?> list) {
+        return list == null ? 0 : list.size();
     }
 }

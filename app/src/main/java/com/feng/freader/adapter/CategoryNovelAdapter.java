@@ -46,31 +46,54 @@ public class CategoryNovelAdapter extends RecyclerView.Adapter<CategoryNovelAdap
     @Override
     public CategoryNovelViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         return new CategoryNovelViewHolder(LayoutInflater.from(mContext)
-                .inflate(R.layout.item_category_novel, null));
+                .inflate(R.layout.item_category_novel, viewGroup, false));
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CategoryNovelViewHolder categoryNovelViewHolder, final int i) {
-        Glide.with(mContext)
-                .load(mCoverList.get(i))
-                .apply(new RequestOptions()
-                    .centerCrop()
-                    .transform(new RoundedCorners(dpToPx(12)))
-                    .placeholder(R.drawable.cover_place_holder)
-                    .error(R.drawable.cover_error))
-                .into(categoryNovelViewHolder.cover);
+    public void onBindViewHolder(@NonNull CategoryNovelViewHolder categoryNovelViewHolder, final int position) {
+        String coverUrl = position < safeSize(mCoverList) ? mCoverList.get(position) : "";
+        RequestOptions options = new RequestOptions()
+                .centerCrop()
+                .transform(new RoundedCorners(dpToPx(12)))
+                .placeholder(R.drawable.cover_place_holder)
+                .error(R.drawable.cover_error);
+        if (isBlankCover(coverUrl)) {
+            Glide.with(mContext)
+                    .load(R.drawable.cover_place_holder)
+                    .apply(options)
+                    .into(categoryNovelViewHolder.cover);
+        } else {
+            Glide.with(mContext)
+                    .load(coverUrl)
+                    .apply(options)
+                    .into(categoryNovelViewHolder.cover);
+        }
         categoryNovelViewHolder.cover.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.clickItem(mNameList.get(i));
+                if (mListener != null && position < safeSize(mNameList)) {
+                    mListener.clickItem(mNameList.get(position));
+                }
             }
         });
-        categoryNovelViewHolder.name.setText(mNameList.get(i));
+        categoryNovelViewHolder.name.setText(position < safeSize(mNameList) ? mNameList.get(position) : "");
     }
 
     @Override
     public int getItemCount() {
-        return mCoverList.size();
+        return safeItemCount(mNameList, mCoverList);
+    }
+
+    public static int safeItemCount(List<String> names, List<String> covers) {
+        return Math.min(safeSize(names), safeSize(covers));
+    }
+
+    public static boolean isBlankCover(String coverUrl) {
+        return coverUrl == null || coverUrl.trim().length() == 0;
+    }
+
+    private static int safeSize(List<String> list) {
+        return list == null ? 0 : list.size();
     }
 
     private int dpToPx(int dp) {
