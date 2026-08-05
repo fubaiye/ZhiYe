@@ -1,10 +1,12 @@
 package com.feng.freader.source;
 
-import com.feng.freader.entity.data.NovelSourceData;
 import com.feng.freader.entity.data.CatalogData;
 import com.feng.freader.entity.data.DetailedChapterData;
+import com.feng.freader.entity.data.NovelSourceData;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
+import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 
 import java.io.IOException;
@@ -81,12 +83,12 @@ public class BookSourceExecutor {
     }
 
     private NovelSourceData fromJsonElement(BookSource source, JsonElement element, BookSource.SourceRules rules) {
+        String url = evalJsonRule(source, source.getVariables().get("host"), element, rules.getUrl());
         NovelSourceData data = new NovelSourceData(
                 transform(RuleEvaluator.evalJsonElement(element, rules.getName()), rules.getJavaScript()),
                 RuleEvaluator.evalJsonElement(element, rules.getAuthor()),
                 RuleEvaluator.evalJsonElement(element, rules.getIntro()),
-                SourceBookLink.encode(source.getId(),
-                        absolute(source, RuleEvaluator.evalJsonElement(element, rules.getUrl()))),
+                SourceBookLink.encode(source.getId(), absolute(source, url)),
                 absolute(source, RuleEvaluator.evalJsonElement(element, rules.getCover())));
         data.setSourceId(source.getId());
         data.setSourceName(source.getName());
@@ -98,12 +100,18 @@ public class BookSourceExecutor {
         if (detailUrl == null || detailUrl.trim().isEmpty()) {
             throw new IOException("书籍详情地址为空");
         }
+        SourceRuleContext detailContext = new SourceRuleContext(source, detailUrl, null);
         String detailBody = httpClient().executeUrl(source, detailUrl);
         String catalogBody = detailBody;
         String tocUrlRule = source.getDetailRules().getUrl();
         String tocUrl = "";
         if (tocUrlRule != null && tocUrlRule.trim().length() > 0) {
-            tocUrl = absolute(source, RuleEvaluator.eval(detailBody, tocUrlRule));
+            if (tocUrlRule.startsWith("template:")) {
+                tocUrl = absolute(source,
+                        SourceTemplateEvaluator.render(stripTemplatePrefix(tocUrlRule), detailContext));
+            } else {
+                tocUrl = absolute(source, RuleEvaluator.eval(detailBody, tocUrlRule));
+            }
         }
         if (tocUrl != null && tocUrl.trim().length() > 0 && !tocUrl.equals(detailUrl)) {
             catalogBody = httpClient().executeUrl(source, tocUrl);
@@ -113,7 +121,7 @@ public class BookSourceExecutor {
         List<String> chapterUrls = new ArrayList<>();
         String listRule = rules.getList();
         if (listRule.startsWith("jsonpath:")) {
-            parseJsonCatalog(source, catalogBody, rules, chapterNames, chapterUrls);
+            parseJsonCatalog(source, catalogBody, rules, detailUrl, chapterNames, chapterUrls);
         } else if (listRule.startsWith("xpath:")) {
             parseXPathCatalog(source, catalogBody, rules, chapterNames, chapterUrls);
         } else if (listRule.length() == 0) {
@@ -146,12 +154,13 @@ public class BookSourceExecutor {
     }
 
     private void parseJsonCatalog(BookSource source, String body, BookSource.SourceRules rules,
-                                  List<String> names, List<String> urls) {
+                                  String detailUrl, List<String> names, List<String> urls)
+            throws IOException {
         List<JsonElement> items = RuleEvaluator.selectJsonElements(body, rules.getList());
         for (JsonElement item : items) {
             addChapter(source,
                     RuleEvaluator.evalJsonElement(item, rules.getName()),
-                    absolute(source, RuleEvaluator.evalJsonElement(item, rules.getUrl())),
+                    absolute(source, evalJsonRule(source, detailUrl, item, rules.getUrl())),
                     names,
                     urls);
         }
@@ -185,15 +194,37 @@ public class BookSourceExecutor {
 
     public DetailedChapterData content(BookSource source, String chapterUrl) throws IOException {
         String url = SourceBookLink.originalUrl(chapterUrl);
+        SourceRuleContext context = new SourceRuleContext(source, url, null);
+        SourceRequest request = SourceRequestParser.parse(url, context);
         String body = httpClient().executeUrl(source, url);
         BookSource.SourceRules rules = source.getContentRules();
         String title = RuleEvaluator.eval(body, rules.getName());
-        String content = extractContent(body, rules);
+        String content = extractContent(body, rules, request.getUrl());
+        if (content.trim().length() == 0) {
+            throw new IOException("正文解析为空；规则=" + rules.getContent()
+                    + "；URL=" + request.getUrl());
+        }
         return new DetailedChapterData(title, content);
     }
 
-    private String extractContent(String body, BookSource.SourceRules rules) {
-        List<Element> items = RuleEvaluator.selectElements(body, rules.getContent());
+    private String extractContent(String body, BookSource.SourceRules rules, String baseUrl)
+            throws IOException {
+        String rule = rules.getContent();
+        if (rule.startsWith("template:")) {
+            JsonElement root;
+            try {
+                root = new JsonParser().parse(body == null ? "" : body);
+            } catch (Throwable throwable) {
+                throw new IOException("正文响应不是有效 JSON", throwable);
+            }
+            String html = SourceTemplateEvaluator.render(stripTemplatePrefix(rule),
+                    new SourceRuleContext(null, baseUrl, root));
+            return Jsoup.parse(html).text().trim();
+        }
+        if (rule.startsWith("jsonpath:")) {
+            return RuleEvaluator.eval(body, rule).trim();
+        }
+        List<Element> items = RuleEvaluator.selectElements(body, rule);
         if (!items.isEmpty()) {
             StringBuilder builder = new StringBuilder();
             for (Element item : items) {
@@ -208,7 +239,25 @@ public class BookSourceExecutor {
             }
             return builder.toString();
         }
-        return RuleEvaluator.eval(body, rules.getContent());
+        return RuleEvaluator.eval(body, rule).trim();
+    }
+
+    private String evalJsonRule(BookSource source, String baseUrl, JsonElement element, String rule) {
+        if (rule != null && rule.startsWith("template:")) {
+            try {
+                return SourceTemplateEvaluator.render(stripTemplatePrefix(rule),
+                        new SourceRuleContext(source, baseUrl, element));
+            } catch (Throwable ignored) {
+                return "";
+            }
+        }
+        return RuleEvaluator.evalJsonElement(element, rule);
+    }
+
+    private String stripTemplatePrefix(String rule) {
+        return rule != null && rule.startsWith("template:")
+                ? rule.substring("template:".length())
+                : (rule == null ? "" : rule);
     }
 
     private String transform(String value, String javaScript) {

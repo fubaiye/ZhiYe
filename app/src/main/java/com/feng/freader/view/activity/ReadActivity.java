@@ -573,7 +573,7 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
      */
     @Override
     public void getChapterUrlListError(String errorMsg) {
-        mStateTv.setText("获取失败，请检查网络后重新加载");
+        mStateTv.setText(readerErrorMessage("目录获取失败", errorMsg));
     }
 
     /**
@@ -607,7 +607,15 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         mIsLoadingChapter = false;
         mJumpToChapterEnd = false;
         mStateTv.setVisibility(View.VISIBLE);
-        mStateTv.setText("获取失败，请检查网络后重新加载");
+        mStateTv.setText(readerErrorMessage("章节获取失败", errorMsg));
+    }
+
+    private String readerErrorMessage(String fallback, String errorMsg) {
+        String message = errorMsg == null ? "" : errorMsg.trim();
+        if (message.length() == 0) {
+            return fallback;
+        }
+        return fallback + "\n\n" + message;
     }
 
     /**

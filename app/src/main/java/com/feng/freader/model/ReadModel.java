@@ -177,7 +177,10 @@ public class ReadModel implements IReadContract.Model {
                     SourceCatalogCache.put(url, data);
                     postChapterListSuccess(data.getChapterUrlList(), data.getChapterNameList());
                 } catch (Throwable t) {
-                    postChapterListError(t.getMessage());
+                    Log.e(TAG, "在线目录加载失败"
+                            + "\nsourceId=" + SourceBookLink.sourceId(url)
+                            + "\nbookUrl=" + SourceBookLink.originalUrl(url), t);
+                    postChapterListError(readableError(t));
                 }
             }
         }).start();
@@ -207,10 +210,22 @@ public class ReadModel implements IReadContract.Model {
                     SourceChapterCache.put(url, data);
                     postDetailedChapterSuccess(data);
                 } catch (Throwable t) {
-                    postDetailedChapterError(t.getMessage());
+                    Log.e(TAG, "在线章节加载失败"
+                            + "\nsourceId=" + SourceBookLink.sourceId(url)
+                            + "\nchapterUrl=" + SourceBookLink.originalUrl(url), t);
+                    postDetailedChapterError(readableError(t));
                 }
             }
         }).start();
+    }
+
+    private String readableError(Throwable throwable) {
+        if (throwable == null) {
+            return "";
+        }
+        String message = throwable.getMessage();
+        return throwable.getClass().getSimpleName()
+                + (message == null || message.trim().length() == 0 ? "" : "：" + message);
     }
 
     private void postChapterListSuccess(final List<String> urls, final List<String> names) {

@@ -13,6 +13,7 @@ import okhttp3.Response;
 public class SourceHttpClient {
     private static final MediaType FORM_TYPE =
             MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");
+    private static final String JSON_TYPE = "application/json; charset=utf-8";
     private OkHttpClient client;
 
     public SourceHttpClient() {
@@ -35,9 +36,39 @@ public class SourceHttpClient {
     }
 
     public String executeUrl(BookSource source, String url) throws IOException {
-        Request.Builder builder = createRequestBuilder(source, url, "", 1);
-        builder.get();
+        return executeUrl(source, url, new SourceRuleContext(source, url, null));
+    }
+
+    public String executeUrl(BookSource source, String rawUrl,
+                             SourceRuleContext context) throws IOException {
+        SourceRequest spec = SourceRequestParser.parse(rawUrl, context);
+        if (spec.getUrl().trim().length() == 0) {
+            throw new IOException("最终请求地址为空");
+        }
+        Request.Builder builder = createRequestBuilder(source, spec.getUrl(), "", 1);
+        for (Map.Entry<String, String> entry : spec.getHeaders().entrySet()) {
+            builder.header(entry.getKey(), entry.getValue());
+        }
+        if ("POST".equalsIgnoreCase(spec.getMethod())) {
+            String contentType = spec.getContentType();
+            if (contentType.length() == 0) {
+                contentType = looksLikeJson(spec.getBody())
+                        ? JSON_TYPE
+                        : "application/x-www-form-urlencoded; charset=utf-8";
+            }
+            builder.post(RequestBody.create(MediaType.parse(contentType), spec.getBody()));
+        } else {
+            builder.get();
+        }
         return executeRequest(builder.build());
+    }
+
+    private boolean looksLikeJson(String value) {
+        if (value == null) {
+            return false;
+        }
+        String text = value.trim();
+        return text.startsWith("{") || text.startsWith("[");
     }
 
     private Request.Builder createRequestBuilder(BookSource source, String url,

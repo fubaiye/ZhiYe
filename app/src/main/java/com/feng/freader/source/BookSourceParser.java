@@ -220,16 +220,29 @@ public class BookSourceParser {
         }
         value = value.replace("@text", "").replace("@Text", "").trim();
         if (value.startsWith("css:") || value.startsWith("xpath:") || value.startsWith("jsonpath:")
-                || value.startsWith("javascript:")) {
+                || value.startsWith("javascript:") || value.startsWith("template:")) {
             return value;
-        }
-        if (jsonContext || isJsonPathLike(value)) {
-            return "jsonpath:" + normalizeJsonPath(value);
         }
         if (value.startsWith("//") || value.startsWith("(//")) {
             return "xpath:" + value;
         }
+        if (isUrlTemplate(value) || value.contains("{{")) {
+            return "template:" + value;
+        }
+        if (isJsonPathLike(value)) {
+            return "jsonpath:" + normalizeJsonPath(value);
+        }
+        if (jsonContext && value.matches("[A-Za-z0-9_$.\\[\\]*]+")) {
+            return "jsonpath:" + normalizeJsonPath(value);
+        }
         return "css:" + value;
+    }
+
+    private static boolean isUrlTemplate(String value) {
+        return value.startsWith("http://")
+                || value.startsWith("https://")
+                || (value.startsWith("/") && !value.startsWith("//"))
+                || value.matches("^[A-Za-z][A-Za-z0-9+.-]*://.*");
     }
 
     private static boolean isJsonPathLike(String value) {

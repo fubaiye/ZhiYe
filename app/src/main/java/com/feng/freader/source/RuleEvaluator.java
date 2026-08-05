@@ -36,7 +36,8 @@ public class RuleEvaluator {
 
     public static List<Element> selectElements(String body, String rule) {
         if (rule == null || rule.trim().length() == 0 || rule.startsWith("jsonpath:")
-                || rule.startsWith("xpath:") || rule.startsWith("javascript:")) {
+                || rule.startsWith("xpath:") || rule.startsWith("javascript:")
+                || rule.startsWith("template:")) {
             return new ArrayList<>();
         }
         String rawRule = stripPrefix(rule, "css:");
@@ -125,6 +126,15 @@ public class RuleEvaluator {
         if (rule.startsWith("javascript:")) {
             return applyJavaScript(body, stripPrefix(rule, "javascript:"));
         }
+        if (rule.startsWith("template:")) {
+            try {
+                return SourceTemplateEvaluator.render(
+                        stripPrefix(rule, "template:"),
+                        new SourceRuleContext(null, "", new JsonParser().parse(body == null ? "" : body)));
+            } catch (Throwable ignored) {
+                return "";
+            }
+        }
         return body == null ? "" : body;
     }
 
@@ -191,7 +201,7 @@ public class RuleEvaluator {
         }
     }
 
-    private static List<JsonElement> selectJsonElements(JsonElement root, String path) {
+    public static List<JsonElement> selectJsonElements(JsonElement root, String path) {
         List<JsonElement> current = new ArrayList<>();
         current.add(root);
         String body = normalizeJsonPath(path);
