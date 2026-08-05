@@ -505,7 +505,7 @@ public class ReadActivity extends BaseActivity<ReadPresenter>
         if (mIsNeedWrite2Db) {
             // 将书籍信息存入数据库
             mDbManager.deleteBookshelfNovel(mNovelUrl);
-            if (mIsReverse) {   // 如果倒置了目录的话，需要倒置章节索引
+            if (mIsReverse && !mChapterUrlList.isEmpty()) {   // 如果倒置了目录的话，需要倒置章节索引
                 mChapterIndex = mChapterUrlList.size() - 1 - mChapterIndex;
             }
             if (mType == 0 || mType == 1) {

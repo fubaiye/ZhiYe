@@ -54,7 +54,7 @@ public class NovelSourceAdapter extends
     @Override
     public NovelSourceViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         return new NovelSourceViewHolder(LayoutInflater.from(mContext)
-                .inflate(R.layout.item_novel_source, null));
+                .inflate(R.layout.item_novel_source, viewGroup, false));
     }
 
     @Override
@@ -79,7 +79,9 @@ public class NovelSourceAdapter extends
         novelSourceViewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mListener.clickItem(i);
+                if (mListener != null) {
+                    mListener.clickItem(i);
+                }
             }
         });
     }

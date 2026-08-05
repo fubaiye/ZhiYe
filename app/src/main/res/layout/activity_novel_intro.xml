@@ -148,14 +148,50 @@
         android:background="@color/novel_intro_separate_line"/>
 
     <!-- catalog -->
+
+    <TextView
+        android:id="@+id/tv_novel_intro_start_read"
+        android:layout_width="0dp"
+        android:layout_height="44dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/v_novel_intro_separate_line"
+        app:layout_constraintEnd_toStartOf="@id/tv_novel_intro_add_bookshelf"
+        android:layout_marginStart="@dimen/novel_intro_margin_start_and_end"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/zy_intro_primary_button"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="开始阅读"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tv_novel_intro_add_bookshelf"
+        android:layout_width="0dp"
+        android:layout_height="44dp"
+        app:layout_constraintStart_toEndOf="@id/tv_novel_intro_start_read"
+        app:layout_constraintTop_toTopOf="@id/tv_novel_intro_start_read"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="@dimen/novel_intro_margin_start_and_end"
+        android:background="@drawable/zy_intro_secondary_button"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="加入书架"
+        android:textColor="#4F7CFF"
+        android:textSize="16sp" />
     
     <TextView
         android:id="@+id/tv_novel_intro_catalog"
         android:layout_width="0dp"
         android:layout_height="@dimen/novel_intro_catalog_height"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/v_novel_intro_separate_line"
+        app:layout_constraintTop_toBottomOf="@id/tv_novel_intro_start_read"
         app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="14dp"
         android:text="@string/novel_intro_catalog"
         android:textSize="18sp"
         android:textColor="@color/novel_intro_catalog_text"

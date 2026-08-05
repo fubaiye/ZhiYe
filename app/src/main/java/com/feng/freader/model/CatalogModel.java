@@ -16,6 +16,7 @@ import com.feng.freader.http.OkhttpCall;
 import com.feng.freader.http.OkhttpUtil;
 import com.feng.freader.source.BookSource;
 import com.feng.freader.source.BookSourceExecutor;
+import com.feng.freader.source.SourceCatalogCache;
 import com.feng.freader.source.SourceBookLink;
 import com.feng.freader.source.SourceRepository;
 import com.google.gson.Gson;
@@ -101,6 +102,7 @@ public class CatalogModel implements ICatalogContract.Model {
                         postSourceCatalogError(Constant.NOT_FOUND_CATALOG_INFO);
                         return;
                     }
+                    SourceCatalogCache.put(url, data);
                     postSourceCatalogSuccess(data);
                 } catch (Throwable t) {
                     String sourceId = SourceBookLink.sourceId(url);

@@ -17,6 +17,8 @@ import com.feng.freader.http.OkhttpUtil;
 import com.feng.freader.http.WikisourceApi;
 import com.feng.freader.source.BookSource;
 import com.feng.freader.source.BookSourceExecutor;
+import com.feng.freader.source.SourceCatalogCache;
+import com.feng.freader.source.SourceChapterCache;
 import com.feng.freader.source.SourceBookLink;
 import com.feng.freader.source.SourceRepository;
 import com.feng.freader.util.EpubUtils;
@@ -150,6 +152,12 @@ public class ReadModel implements IReadContract.Model {
     }
 
     private void getSourceChapterList(final String url) {
+        com.feng.freader.entity.data.CatalogData cached = SourceCatalogCache.get(url);
+        if (cached != null && cached.getChapterUrlList() != null
+                && !cached.getChapterUrlList().isEmpty()) {
+            postChapterListSuccess(cached.getChapterUrlList(), cached.getChapterNameList());
+            return;
+        }
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -166,6 +174,7 @@ public class ReadModel implements IReadContract.Model {
                         postChapterListError("未找到目录");
                         return;
                     }
+                    SourceCatalogCache.put(url, data);
                     postChapterListSuccess(data.getChapterUrlList(), data.getChapterNameList());
                 } catch (Throwable t) {
                     postChapterListError(t.getMessage());
@@ -175,6 +184,11 @@ public class ReadModel implements IReadContract.Model {
     }
 
     private void getSourceDetailedChapterData(final String url) {
+        DetailedChapterData cached = SourceChapterCache.get(url);
+        if (cached != null) {
+            postDetailedChapterSuccess(cached);
+            return;
+        }
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -190,6 +204,7 @@ public class ReadModel implements IReadContract.Model {
                         postDetailedChapterError("本章无数据");
                         return;
                     }
+                    SourceChapterCache.put(url, data);
                     postDetailedChapterSuccess(data);
                 } catch (Throwable t) {
                     postDetailedChapterError(t.getMessage());

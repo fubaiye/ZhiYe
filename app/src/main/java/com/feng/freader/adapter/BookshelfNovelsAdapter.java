@@ -52,7 +52,7 @@ public class BookshelfNovelsAdapter extends RecyclerView.Adapter {
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         return new ContentViewHolder(LayoutInflater.from(mContext).inflate(
-                R.layout.item_bookshelf_novel, null));
+                R.layout.item_bookshelf_novel, viewGroup, false));
     }
 
     @Override
@@ -108,7 +108,9 @@ public class BookshelfNovelsAdapter extends RecyclerView.Adapter {
                         mCheckedList.set(i, true);
                     }
                 } else {
-                    mListener.clickItem(i);
+                    if (mListener != null) {
+                        mListener.clickItem(i);
+                    }
                 }
             }
         });
@@ -119,7 +121,9 @@ public class BookshelfNovelsAdapter extends RecyclerView.Adapter {
                 if (mIsMultiDelete) {
                     return false;
                 }
-                mListener.longClick(i);
+                if (mListener != null) {
+                    mListener.longClick(i);
+                }
                 return true;
             }
         });

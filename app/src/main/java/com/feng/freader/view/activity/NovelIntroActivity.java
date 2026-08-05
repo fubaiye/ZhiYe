@@ -20,6 +20,8 @@ import com.feng.freader.R;
 import com.feng.freader.base.BaseActivity;
 import com.feng.freader.base.BasePresenter;
 import com.feng.freader.constant.EventBusCode;
+import com.feng.freader.db.DatabaseManager;
+import com.feng.freader.entity.data.BookshelfNovelDbData;
 import com.feng.freader.download.NovelDownloadService;
 import com.feng.freader.entity.data.NovelSourceData;
 import com.feng.freader.entity.eventbus.Event;
@@ -28,6 +30,7 @@ import com.feng.freader.http.WikisourceApi;
 import com.feng.freader.source.SourceBookLink;
 import com.feng.freader.test.TestActivity;
 import com.feng.freader.util.BlurUtil;
+import com.feng.freader.util.EventBusUtil;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -52,6 +55,8 @@ public class NovelIntroActivity extends BaseActivity implements View.OnClickList
     private TextView mNovelWebSiteTv;
     private TextView mNovelIntroduceTv;
     private ImageView mMoreIntroduceIv;
+    private TextView mStartReadTv;
+    private TextView mAddBookshelfTv;
     private TextView mCatalogTv;
 
     private NovelSourceData mNovelSourceData;
@@ -140,6 +145,10 @@ public class NovelIntroActivity extends BaseActivity implements View.OnClickList
             }
         });
 
+        mStartReadTv = findViewById(R.id.tv_novel_intro_start_read);
+        mStartReadTv.setOnClickListener(this);
+        mAddBookshelfTv = findViewById(R.id.tv_novel_intro_add_bookshelf);
+        mAddBookshelfTv.setOnClickListener(this);
         mCatalogTv = findViewById(R.id.tv_novel_intro_catalog);
         mCatalogTv.setOnClickListener(this);
     }
@@ -188,6 +197,12 @@ public class NovelIntroActivity extends BaseActivity implements View.OnClickList
             case R.id.iv_novel_intro_back:
                 finish();
                 break;
+            case R.id.tv_novel_intro_start_read:
+                startReading();
+                break;
+            case R.id.tv_novel_intro_add_bookshelf:
+                addToBookshelf();
+                break;
             case R.id.iv_novel_intro_menu:
                 PopupMenu popupMenu = new PopupMenu(NovelIntroActivity.this, mMenuIv);
                 popupMenu.getMenuInflater().inflate(R.menu.menu_novel_intro, popupMenu.getMenu());
@@ -231,6 +246,37 @@ public class NovelIntroActivity extends BaseActivity implements View.OnClickList
             default:
                 break;
         }
+    }
+
+    private void startReading() {
+        if (mNovelSourceData == null || mNovelSourceData.getUrl().length() == 0) {
+            showShortToast("书籍地址为空");
+            return;
+        }
+        Intent intent = new Intent(NovelIntroActivity.this, ReadActivity.class);
+        intent.putExtra(ReadActivity.KEY_NOVEL_URL, mNovelSourceData.getUrl());
+        intent.putExtra(ReadActivity.KEY_NAME, mNovelSourceData.getName());
+        intent.putExtra(ReadActivity.KEY_COVER, mNovelSourceData.getCover());
+        intent.putExtra(ReadActivity.KEY_TYPE, 0);
+        intent.putExtra(ReadActivity.KEY_CHAPTER_INDEX, 0);
+        intent.putExtra(ReadActivity.KEY_POSITION, 0);
+        startActivity(intent);
+    }
+
+    private void addToBookshelf() {
+        if (mNovelSourceData == null || mNovelSourceData.getUrl().length() == 0) {
+            showShortToast("书籍地址为空");
+            return;
+        }
+        DatabaseManager db = DatabaseManager.getInstance();
+        if (db.isExistInBookshelfNovel(mNovelSourceData.getUrl())) {
+            showShortToast("已在书架");
+            return;
+        }
+        db.insertBookshelfNovel(new BookshelfNovelDbData(mNovelSourceData.getUrl(),
+                mNovelSourceData.getName(), mNovelSourceData.getCover(), 0, 0, 0));
+        EventBusUtil.sendEvent(new Event(EventBusCode.BOOKSHELF_UPDATE_LIST));
+        showShortToast("已加入书架");
     }
 
     private String getDisplayUrl() {

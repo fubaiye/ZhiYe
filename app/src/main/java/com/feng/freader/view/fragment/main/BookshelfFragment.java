@@ -468,7 +468,7 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
         if (position < 0 || position >= mDataList.size()) {
             return;
         }
-        if (!NetUtil.hasInternet(getActivity())) {
+        if (mDataList.get(position).getType() == 0 && !NetUtil.hasInternet(getActivity())) {
             showShortToast("当前无网络，请检查网络后重试");
             return;
         }
@@ -493,7 +493,8 @@ public class BookshelfFragment extends BaseFragment<BookshelfPresenter>
                 new BookshelfNovelsAdapter.BookshelfNovelListener() {
                     @Override
                     public void clickItem(int position) {
-                        if (!NetUtil.hasInternet(getActivity())) {
+                        if (mDataList.get(position).getType() == 0
+                                && !NetUtil.hasInternet(getActivity())) {
                             showShortToast("当前无网络，请检查网络后重试");
                             return;
                         }
