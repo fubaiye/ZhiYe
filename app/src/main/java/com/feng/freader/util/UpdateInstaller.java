@@ -13,24 +13,16 @@ import android.provider.Settings;
 import android.support.v4.content.FileProvider;
 import android.widget.Toast;
 
+import com.feng.freader.http.NetworkClientFactory;
 import com.feng.freader.model.UpdateInfo;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 public class UpdateInstaller {
     private static final String APK_MIME_TYPE = "application/vnd.android.package-archive";
     private static final String UPDATE_FILE_NAME = "ZhiYe-update.apk";
     private static final String TEMP_UPDATE_FILE_NAME = UPDATE_FILE_NAME + ".download";
-    private static final int CONNECT_TIMEOUT_MS = 30000;
-    private static final int READ_TIMEOUT_MS = 120000;
-    private static final int MAX_REDIRECTS = 8;
     private static final int MAX_RETRY_COUNT = 3;
     private static final long PROGRESS_NOTIFY_BYTES = 512L * 1024L;
     private static final long PROGRESS_NOTIFY_INTERVAL_MS = 800L;
@@ -122,91 +114,30 @@ public class UpdateInstaller {
         throw lastException == null ? new IOException("Download failed") : lastException;
     }
 
-    private static void download(String apkUrl, File apkFile, long expectedSize,
-                                 DownloadProgressReporter progressReporter)
+    private static void download(String apkUrl, File apkFile, final long expectedSize,
+                                 final DownloadProgressReporter progressReporter)
             throws IOException {
-        HttpURLConnection connection = openConnection(apkUrl, 0);
-        InputStream inputStream = null;
-        OutputStream outputStream = null;
-        try {
-            long contentLength = contentLength(connection);
-            long totalBytes = contentLength > 0 ? contentLength : expectedSize;
-            inputStream = new BufferedInputStream(connection.getInputStream());
-            outputStream = new FileOutputStream(apkFile);
-            byte[] buffer = new byte[32 * 1024];
-            int count;
-            long downloadedBytes = 0L;
-            long lastNotifiedBytes = 0L;
-            long lastNotifiedAt = 0L;
-            progressReporter.update(0L, totalBytes, true);
-            while ((count = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, count);
-                downloadedBytes += count;
-                long now = System.currentTimeMillis();
-                if (downloadedBytes - lastNotifiedBytes >= PROGRESS_NOTIFY_BYTES
-                        || now - lastNotifiedAt >= PROGRESS_NOTIFY_INTERVAL_MS) {
-                    progressReporter.update(downloadedBytes, totalBytes, false);
-                    lastNotifiedBytes = downloadedBytes;
-                    lastNotifiedAt = now;
-                }
-            }
-            outputStream.flush();
-            progressReporter.update(downloadedBytes, totalBytes, true);
-        } finally {
-            if (inputStream != null) {
-                inputStream.close();
-            }
-            if (outputStream != null) {
-                outputStream.close();
-            }
-            connection.disconnect();
-        }
-    }
+        new UpdateApkDownloader(NetworkClientFactory.shared()).download(apkUrl, apkFile,
+                new UpdateApkDownloader.ProgressListener() {
+                    private long lastNotifiedBytes;
+                    private long lastNotifiedAt;
 
-    private static HttpURLConnection openConnection(String url, int redirectCount) throws IOException {
-        if (redirectCount > MAX_REDIRECTS) {
-            throw new IOException("Too many redirects");
-        }
-        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-        connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
-        connection.setReadTimeout(READ_TIMEOUT_MS);
-        connection.setInstanceFollowRedirects(false);
-        connection.setRequestProperty("User-Agent", "ZhiYe Android Updater");
-        connection.setRequestProperty("Accept", APK_MIME_TYPE + ",application/octet-stream,*/*");
-        int code = connection.getResponseCode();
-        if (code == HttpURLConnection.HTTP_MOVED_PERM
-                || code == HttpURLConnection.HTTP_MOVED_TEMP
-                || code == HttpURLConnection.HTTP_SEE_OTHER
-                || code == 307
-                || code == 308) {
-            String location = connection.getHeaderField("Location");
-            connection.disconnect();
-            if (location == null || location.length() == 0) {
-                throw new IOException("Empty redirect");
-            }
-            URL next = new URL(new URL(url), location);
-            return openConnection(next.toString(), redirectCount + 1);
-        }
-        if (code < HttpURLConnection.HTTP_OK || code >= HttpURLConnection.HTTP_MULT_CHOICE) {
-            connection.disconnect();
-            throw new IOException("Unexpected http status " + code);
-        }
-        return connection;
-    }
-
-    private static long contentLength(HttpURLConnection connection) {
-        if (connection == null) {
-            return -1L;
-        }
-        String value = connection.getHeaderField("Content-Length");
-        if (value == null || value.trim().length() == 0) {
-            return -1L;
-        }
-        try {
-            return Long.parseLong(value.trim());
-        } catch (Throwable ignored) {
-            return -1L;
-        }
+                    @Override
+                    public void onProgress(long downloadedBytes, long totalBytes) {
+                        long displayTotal = totalBytes > 0L ? totalBytes : expectedSize;
+                        long now = System.currentTimeMillis();
+                        if (downloadedBytes == 0L
+                                || downloadedBytes - lastNotifiedBytes >= PROGRESS_NOTIFY_BYTES
+                                || now - lastNotifiedAt >= PROGRESS_NOTIFY_INTERVAL_MS
+                                || displayTotal > 0L && downloadedBytes >= displayTotal) {
+                            progressReporter.update(downloadedBytes, displayTotal,
+                                    downloadedBytes == 0L || displayTotal > 0L
+                                            && downloadedBytes >= displayTotal);
+                            lastNotifiedBytes = downloadedBytes;
+                            lastNotifiedAt = now;
+                        }
+                    }
+                });
     }
 
     private static boolean deleteIfExists(File file) {

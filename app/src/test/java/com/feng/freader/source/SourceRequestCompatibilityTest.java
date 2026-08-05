@@ -71,6 +71,22 @@ public class SourceRequestCompatibilityTest {
     }
 
     @Test
+    public void templateSupportsCommonLegadoVariablesAndJavaHelpers() throws Exception {
+        BookSource source = new BookSource();
+        java.util.Map<String, String> variables = new java.util.LinkedHashMap<>();
+        variables.put("key", "斗破苍穹");
+        source.setVariables(variables);
+
+        String result = SourceTemplateEvaluator.render(
+                "{{host}}|{{baseUrl}}|{{key}}|{{java.encodeURI(key)}}|{{java.base64(key)}}",
+                new SourceRuleContext(source, "https://m.example.com/book/1", null));
+
+        assertEquals("m.example.com|https://m.example.com/book/1|斗破苍穹|"
+                + "%E6%96%97%E7%A0%B4%E8%8B%8D%E7%A9%B9|"
+                + "5paX56C06IuN56m5", result);
+    }
+
+    @Test
     public void jsonCatalogRendersChapterUrlTemplateFromItemAndDetailUrl() throws Exception {
         MockWebServer server = new MockWebServer();
         server.enqueue(new MockResponse().setBody("{\"data\":{\"chapters\":["
